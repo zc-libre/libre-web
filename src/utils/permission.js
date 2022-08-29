@@ -1,21 +1,20 @@
 import store from '@/store'
 
 /**
- * @param {Array} value
- * @returns {Boolean}
- * @example see @/views/permission/directive.vue
+ * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
+ * @description 检查权限
+ * @param value
+ * @returns {boolean}
  */
 export default function checkPermission(value) {
   if (value && value instanceof Array && value.length > 0) {
-    const roles = store.getters && store.getters.roles
-    const permissionRoles = value
+    const permissions = store.getters['user/permissions']
+    const permissionPermissions = value
 
-    const hasPermission = roles.some(role => {
-      return permissionRoles.includes(role)
+    return permissions.some((role) => {
+      return permissionPermissions.includes(role)
     })
-    return hasPermission
   } else {
-    console.error(`need roles! Like v-permission="['admin','editor']"`)
     return false
   }
 }

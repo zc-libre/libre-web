@@ -1,60 +1,98 @@
-const Mock = require('mockjs')
-const { param2Obj } = require('./utils')
+const chokidar = require('chokidar')
+const bodyParser = require('body-parser')
+const chalk = require('chalk')
+const path = require('path')
+const { mock } = require('mockjs')
+const { baseURL } = require('../src/config')
+const mockDir = path.join(process.cwd(), 'mock')
+const { handleMockArray } = require('./utils')
 
-const user = require('./user')
-const role = require('./role')
-const article = require('./article')
-const search = require('./remote-search')
-
-const mocks = [
-  ...user,
-  ...role,
-  ...article,
-  ...search
-]
-
-// for front mock
-// please use it cautiously, it will redefine XMLHttpRequest,
-// which will cause many of your third-party libraries to be invalidated(like progress event).
-function mockXHR() {
-  // mock patch
-  // https://github.com/nuysoft/Mock/issues/300
-  Mock.XHR.prototype.proxy_send = Mock.XHR.prototype.send
-  Mock.XHR.prototype.send = function() {
-    if (this.custom.xhr) {
-      this.custom.xhr.withCredentials = this.withCredentials || false
-
-      if (this.responseType) {
-        this.custom.xhr.responseType = this.responseType
-      }
-    }
-    this.proxy_send(...arguments)
+/**
+ *
+ * @param app
+ * @returns {{mockStartIndex: number, mockRoutesLength: number}}
+ */
+const registerRoutes = (app) => {
+  let mockLastIndex
+  const mocks = []
+  const mockArray = handleMockArray()
+  mockArray.forEach((item) => {
+    const obj = require(item)
+    mocks.push(...obj)
+  })
+  const mocksForServer = mocks.map((route) => {
+    return responseFake(route.url, route.type, route.response)
+  })
+  for (const mock of mocksForServer) {
+    app[mock.type](mock.url, mock.response)
+    mockLastIndex = app._router.stack.length
   }
-
-  function XHR2ExpressReqWrap(respond) {
-    return function(options) {
-      let result = null
-      if (respond instanceof Function) {
-        const { body, type, url } = options
-        // https://expressjs.com/en/4x/api.html#req
-        result = respond({
-          method: type,
-          body: JSON.parse(body),
-          query: param2Obj(url)
-        })
-      } else {
-        result = respond
-      }
-      return Mock.mock(result)
-    }
-  }
-
-  for (const i of mocks) {
-    Mock.mock(new RegExp(i.url), i.type || 'get', XHR2ExpressReqWrap(i.response))
+  const mockRoutesLength = Object.keys(mocksForServer).length
+  return {
+    mockRoutesLength: mockRoutesLength,
+    mockStartIndex: mockLastIndex - mockRoutesLength,
   }
 }
 
-module.exports = {
-  mocks,
-  mockXHR
+/**
+ *
+ * @param url
+ * @param type
+ * @param respond
+ * @returns {{response(*=, *=): void, type: (*|string), url: RegExp}}
+ */
+const responseFake = (url, type, respond) => {
+  return {
+    url: new RegExp(`${baseURL}${url}`),
+    type: type || 'get',
+    response(req, res) {
+      res.status(200)
+      if (JSON.stringify(req.body) !== '{}') {
+        console.log(chalk.green(`> 请求地址：${req.path}`))
+        console.log(chalk.green(`> 请求参数：${JSON.stringify(req.body)}\n`))
+      } else {
+        console.log(chalk.green(`> 请求地址：${req.path}\n`))
+      }
+      res.json(mock(respond instanceof Function ? respond(req, res) : respond))
+    },
+  }
+}
+/**
+ *
+ * @param app
+ */
+module.exports = (app) => {
+  app.use(bodyParser.json())
+  app.use(
+    bodyParser.urlencoded({
+      extended: true,
+    })
+  )
+
+  const mockRoutes = registerRoutes(app)
+  let mockRoutesLength = mockRoutes.mockRoutesLength
+  let mockStartIndex = mockRoutes.mockStartIndex
+  chokidar
+    .watch(mockDir, {
+      ignored: /mock-server/,
+      ignoreInitial: true,
+    })
+    .on('all', (event) => {
+      if (event === 'change' || event === 'add') {
+        try {
+          app._router.stack.splice(mockStartIndex, mockRoutesLength)
+
+          Object.keys(require.cache).forEach((item) => {
+            if (item.includes(mockDir)) {
+              delete require.cache[require.resolve(item)]
+            }
+          })
+          const mockRoutes = registerRoutes(app)
+          mockRoutesLength = mockRoutes.mockRoutesLength
+          mockStartIndex = mockRoutes.mockStartIndex
+        } catch (error) {
+          console.log(chalk.red(error))
+        }
+      }
+    })
 }

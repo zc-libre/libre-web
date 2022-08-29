@@ -1,28 +1,28 @@
-const state = {
-  logs: []
-}
+/**
+ * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
+ * @description 异常捕获的状态拦截，请勿修改
+ */
 
+const state = () => ({
+  errorLogs: [],
+})
+const getters = {
+  errorLogs: (state) => state.errorLogs,
+}
 const mutations = {
-  ADD_ERROR_LOG: (state, log) => {
-    state.logs.push(log)
+  addErrorLog(state, errorLog) {
+    state.errorLogs.push(errorLog)
   },
-  CLEAR_ERROR_LOG: (state) => {
-    state.logs.splice(0)
-  }
+  clearErrorLog: (state) => {
+    state.errorLogs.splice(0)
+  },
 }
-
 const actions = {
-  addErrorLog({ commit }, log) {
-    commit('ADD_ERROR_LOG', log)
+  addErrorLog({ commit }, errorLog) {
+    commit('addErrorLog', errorLog)
   },
   clearErrorLog({ commit }) {
-    commit('CLEAR_ERROR_LOG')
-  }
+    commit('clearErrorLog')
+  },
 }
-
-export default {
-  namespaced: true,
-  state,
-  mutations,
-  actions
-}
+export default { state, getters, mutations, actions }

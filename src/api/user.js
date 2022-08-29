@@ -1,24 +1,38 @@
 import request from '@/utils/request'
+import { encryptedData } from '@/utils/encrypt'
+import { loginRSA, tokenName } from '@/config'
 
-export function login(data) {
+export async function login(data) {
+  if (loginRSA) {
+    data = await encryptedData(data)
+  }
   return request({
     url: '/auth/token',
     method: 'post',
-    data
+    data,
   })
 }
 
-export function getInfo(token) {
+export function getUserInfo(accessToken) {
   return request({
-    url: '/vue-element-admin/user/info',
-    method: 'get',
-    params: { token }
+    url: '/auth/userInfo',
+    method: 'post',
+    data: {
+      [tokenName]: accessToken,
+    },
   })
 }
 
 export function logout() {
   return request({
-    url: '/vue-element-admin/user/logout',
-    method: 'post'
+    url: '/auth/logout',
+    method: 'post',
+  })
+}
+
+export function register() {
+  return request({
+    url: '/auth/register',
+    method: 'post',
   })
 }
