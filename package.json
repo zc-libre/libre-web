@@ -66,7 +66,9 @@
     "zx-player": "^1.0.2",
     "zx-quill": "^0.0.3",
     "zx-templates": "^0.0.26",
-    "zx-verify": "^0.0.2"
+    "zx-verify": "^0.0.2",
+    "@riophae/vue-treeselect": "^0.4.0",
+    "array-to-tree": "^3.3.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.5.15",

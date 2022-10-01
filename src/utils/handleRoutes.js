@@ -26,11 +26,9 @@ export function convertRouter(asyncRoutes) {
   })
 }
 
-
 export const loadView = (view) => {
   return (resolve) => require([`@/views/${view}`], resolve)
 }
-
 
 /**
  * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）

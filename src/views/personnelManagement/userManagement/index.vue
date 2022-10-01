@@ -46,6 +46,11 @@
       ></el-table-column>
       <el-table-column
         show-overflow-tooltip
+        prop="nickName"
+        label="昵称"
+      ></el-table-column>
+      <el-table-column
+        show-overflow-tooltip
         prop="email"
         label="邮箱"
       ></el-table-column>
@@ -60,7 +65,7 @@
 
       <el-table-column
         show-overflow-tooltip
-        prop="datatime"
+        prop="gmtModified"
         label="修改时间"
       ></el-table-column>
       <el-table-column show-overflow-tooltip label="操作" width="200">
@@ -92,7 +97,7 @@
     components: { Edit },
     data() {
       return {
-        list: null,
+        list: [],
         listLoading: true,
         layout: 'total, sizes, prev, pager, next, jumper',
         total: 0,
@@ -124,7 +129,7 @@
           this.$baseConfirm('你确定要删除当前项吗', null, async () => {
             const { msg } = await doDelete({ ids: row.id })
             this.$baseMessage(msg, 'success')
-            this.fetchData()
+            await this.fetchData()
           })
         } else {
           if (this.selectRows.length > 0) {
@@ -132,7 +137,7 @@
             this.$baseConfirm('你确定要删除选中项吗', null, async () => {
               const { msg } = await doDelete({ ids })
               this.$baseMessage(msg, 'success')
-              this.fetchData()
+              await this.fetchData()
             })
           } else {
             this.$baseMessage('未选中任何行', 'error')
@@ -154,9 +159,9 @@
       },
       async fetchData() {
         this.listLoading = true
-        const { data, totalCount } = await getList(this.queryForm)
-        this.list = data
-        this.total = totalCount
+        const res = await getList(this.queryForm)
+        this.list = res.data.records
+        this.total = res.data.total
         setTimeout(() => {
           this.listLoading = false
         }, 300)

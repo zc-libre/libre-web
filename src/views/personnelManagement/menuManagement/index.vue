@@ -116,7 +116,7 @@
 
 <script>
   import { getRouterList as getList } from '@/api/router'
-  import { getTree, doDelete } from '@/api/menuManagement'
+  import { getTree, doDelete } from '@/api/menu'
   import Edit from './components/MenuManagementEdit'
 
   export default {

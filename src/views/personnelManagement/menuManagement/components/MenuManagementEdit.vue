@@ -24,7 +24,7 @@
 </template>
 
 <script>
-  import { doEdit } from '@/api/menuManagement'
+  import { doEdit } from '@/api/menu'
 
   export default {
     name: 'MenuManagementEdit',
