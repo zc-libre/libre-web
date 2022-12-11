@@ -232,7 +232,6 @@
         ::v-deep {
           .fixed-header {
             @include fix-header;
-
             left: $base-left-menu-width;
             width: $base-right-content-width;
             box-shadow: $base-box-shadow;

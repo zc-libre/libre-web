@@ -79,10 +79,10 @@
           <el-table-column show-overflow-tooltip label="图标">
             <template #default="{ row }">
               <span v-if="row.meta">
-                <vab-icon
+                <svg-icon
                   v-if="row.meta.icon"
-                  :icon="['fas', row.meta.icon]"
-                ></vab-icon>
+                  :icon-class="row.meta.icon"
+                ></svg-icon>
               </span>
             </template>
           </el-table-column>

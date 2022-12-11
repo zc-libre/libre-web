@@ -1,16 +1,15 @@
 import request from '@/utils/request'
 
-export function getTree(data) {
+export function getTree() {
   return request({
-    url: '/sys/menu/getTree',
-    method: 'post',
-    data,
+    url: '/sys/menu/tree',
+    method: 'get',
   })
 }
 
 export function doEdit(data) {
   return request({
-    url: '/menuManagement/doEdit',
+    url: '/sys/menu',
     method: 'post',
     data,
   })
@@ -18,7 +17,21 @@ export function doEdit(data) {
 
 export function doDelete(data) {
   return request({
-    url: '/sys/menu/delete',
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+    url: '/sys/menu',
+    method: 'delete',
+    data,
+  })
+}
+
+export function getSupMenus(data) {
+  return request({
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+    url: '/sys/menu/superior',
     method: 'post',
     data,
   })

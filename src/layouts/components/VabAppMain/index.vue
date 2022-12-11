@@ -8,7 +8,7 @@
     <footer v-show="footerCopyright" class="footer-copyright">
       Copyright
       <vab-icon :icon="['fas', 'copyright']"></vab-icon>
-      vue-admin-better 开源免费版 {{ fullYear }}
+      Libre-Admin {{ fullYear }}
     </footer>
   </div>
 </template>

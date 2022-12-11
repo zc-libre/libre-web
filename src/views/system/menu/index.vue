@@ -1,35 +1,42 @@
 <template>
   <div class="menuManagement-container">
-    <el-divider content-position="left">
-      演示环境仅做基础功能展示，若想实现不同角色的真实菜单配置，需将settings.js路由加载模式改为all模式，由后端全面接管路由渲染与权限控制
-    </el-divider>
     <el-row>
-      <el-col :xs="24" :sm="24" :md="8" :lg="4" :xl="4">
-        <el-tree
-          :data="data"
-          :props="defaultProps"
-          node-key="id"
-          :default-expanded-keys="['root']"
-          @node-click="handleNodeClick"
-        ></el-tree>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="16" :lg="20" :xl="20">
+      <el-col>
         <vab-query-form>
           <vab-query-form-top-panel :span="12">
-            <el-button icon="el-icon-plus" type="primary" @click="handleEdit">
+            <el-button
+              icon="el-icon-plus"
+              size="mini"
+              type="primary"
+              @click="handleEdit()"
+            >
               添加
+            </el-button>
+            <el-button
+              icon="el-icon-delete"
+              type="danger"
+              size="mini"
+              @click="handleEdit()"
+            >
+              删除
             </el-button>
           </vab-query-form-top-panel>
         </vab-query-form>
         <el-table
+          ref="menuTable"
           v-loading="listLoading"
           :data="list"
           :element-loading-text="elementLoadingText"
-          row-key="path"
-          border
-          default-expand-all
+          row-key="id"
           :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+          @selection-change="handleSelectionChange"
         >
+          <el-table-column type="selection" width="55" />
+          <el-table-column
+            show-overflow-tooltip
+            prop="meta.title"
+            label="菜单标题"
+          ></el-table-column>
           <el-table-column
             show-overflow-tooltip
             prop="name"
@@ -64,18 +71,13 @@
             prop="redirect"
             label="重定向"
           ></el-table-column>
-          <el-table-column
-            show-overflow-tooltip
-            prop="meta.title"
-            label="标题"
-          ></el-table-column>
           <el-table-column show-overflow-tooltip label="图标">
             <template #default="{ row }">
               <span v-if="row.meta">
-                <vab-icon
+                <svg-icon
                   v-if="row.meta.icon"
-                  :icon="['fas', row.meta.icon]"
-                ></vab-icon>
+                  :icon-class="row.meta.icon"
+                ></svg-icon>
               </span>
             </template>
           </el-table-column>
@@ -115,16 +117,25 @@
 </template>
 
 <script>
-  import { getRouterList as getList } from '@/api/router'
   import { getTree, doDelete } from '@/api/menu'
-  import Edit from './components/MenuManagementEdit'
+  import Edit from './components/MenuEdit.vue'
 
   export default {
-    name: 'MenuManagement',
+    name: 'Menu',
     components: { Edit },
     data() {
       return {
         data: [],
+        menus: [],
+        form: {
+          type: 1,
+          icon: null,
+          isIframe: 0,
+          cache: 0,
+          seq: 0,
+          title: null,
+          parentId: null,
+        },
         defaultProps: {
           children: 'children',
           label: 'label',
@@ -135,13 +146,11 @@
       }
     },
     async created() {
-      const roleData = await getTree()
-      this.data = roleData.data
-      this.fetchData()
+      await this.fetchData()
     },
     methods: {
       handleEdit(row) {
-        if (row.path) {
+        if (row && row.path) {
           this.$refs['edit'].showEdit(row)
         } else {
           this.$refs['edit'].showEdit()
@@ -150,16 +159,17 @@
       handleDelete(row) {
         if (row.id) {
           this.$baseConfirm('你确定要删除当前项吗', null, async () => {
-            const { msg } = await doDelete({ ids: row.id })
+            const ids = []
+            ids.push(row.id)
+            const { msg } = await doDelete(JSON.stringify(ids))
             this.$baseMessage(msg, 'success')
-            this.fetchData()
+            await this.fetchData()
           })
         }
       },
       async fetchData() {
         this.listLoading = true
-
-        const { data } = await getList()
+        const { data } = await getTree()
         this.list = data
         setTimeout(() => {
           this.listLoading = false
@@ -167,6 +177,18 @@
       },
       handleNodeClick(data) {
         this.fetchData()
+      },
+      toggleSelection(rows) {
+        if (rows) {
+          rows.forEach((row) => {
+            this.$refs.menuTable.toggleRowSelection(row)
+          })
+        } else {
+          this.$refs.menuTable.clearSelection()
+        }
+      },
+      handleSelectionChange(val) {
+        this.menus = val
       },
     },
   }

@@ -55,18 +55,20 @@ instance.interceptors.request.use(
     if (store.getters['user/accessToken']) {
       config.headers[tokenName] = 'Bearer ' + store.getters['user/accessToken']
     }
-    //这里会过滤所有为空、0、false的key，如果不需要请自行注释
-    if (config.data)
-      config.data = Vue.prototype.$baseLodash.pickBy(
-        config.data,
-        Vue.prototype.$baseLodash.identity
-      )
+    // //这里会过滤所有为空、0、false的key，如果不需要请自行注释
+    // if (config.data)
+    //   config.data = Vue.prototype.$baseLodash.pickBy(
+    //     config.data,
+    //     Vue.prototype.$baseLodash.identity
+    //   )
     if (
       config.data &&
       config.headers['Content-Type'] ===
         'application/x-www-form-urlencoded;charset=UTF-8'
-    )
-      config.data = qs.stringify(config.data)
+    ) {
+      if (!(config.data instanceof String))
+        config.data = qs.stringify(config.data)
+    }
     if (debounce.some((item) => config.url.includes(item)))
       loadingInstance = Vue.prototype.$baseLoading()
     return config

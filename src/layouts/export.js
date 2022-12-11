@@ -1,8 +1,3 @@
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 公共布局及样式自动引入
- */
-
 import Vue from 'vue'
 
 const requireComponents = require.context('./components', true, /\.vue$/)
@@ -12,7 +7,11 @@ requireComponents.keys().forEach((fileName) => {
   Vue.component(componentName, componentConfig.default || componentConfig)
 })
 
-const requireZxLayouts = require.context('zx-layouts', true, /\.vue$/)
+const requireZxLayouts = require.context(
+  '../components/zx-layouts',
+  true,
+  /\.vue$/
+)
 requireZxLayouts.keys().forEach((fileName) => {
   const componentConfig = requireZxLayouts(fileName)
   const componentName = componentConfig.default.name
