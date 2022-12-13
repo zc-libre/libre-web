@@ -92,7 +92,7 @@
 </template>
 <script>
   import { isPassword, isPhone } from '@/utils/validate'
-  import { register } from '@/api/user'
+  import { register } from '@/api/auth'
   export default {
     username: 'Register',
     directives: {

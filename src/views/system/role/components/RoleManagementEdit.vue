@@ -18,7 +18,7 @@
 </template>
 
 <script>
-  import { doEdit } from '@/api/roleManagement'
+  import { doEdit } from '@/api/role'
 
   export default {
     name: 'RoleManagementEdit',

@@ -71,7 +71,7 @@
           placeholder="菜单标题"
         />
       </el-form-item>
-      <el-form-item v-if="form.type === 2" label="按钮名称" prop="title">
+      <el-form-item v-if="form.type === 2" label="按钮名称" prop="meta.title">
         <el-input
           v-model="form.title"
           placeholder="按钮名称"
@@ -205,10 +205,8 @@
         this.dialogFormVisible = true
       },
       close() {
-        this.$refs['form'].resetFields()
-        this.form = this.$options.data().form
-        this.dialogFormVisible = false
         this.form = {}
+        this.dialogFormVisible = false
       },
       save() {
         this.$refs['form'].validate(async (valid) => {

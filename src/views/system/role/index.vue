@@ -131,17 +131,9 @@
 </template>
 
 <script>
-  import {
-    getList,
-    doDelete,
-    doEdit,
-    editMenu,
-    getMenu,
-    get,
-  } from '@/api/roleManagement'
+  import { getList, doDelete, editMenu, getMenu, get } from '@/api/role'
   import Edit from './components/RoleManagementEdit'
   import { getMenusTree } from '@/api/menu'
-  import Treeselect from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import arrayToTree from 'array-to-tree'
 

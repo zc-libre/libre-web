@@ -89,7 +89,7 @@
 </template>
 
 <script>
-  import { getList, doDelete } from '@/api/userManagement'
+  import { getList, doDelete } from '@/api/sysUser'
   import Edit from './components/UserManagementEdit'
 
   export default {

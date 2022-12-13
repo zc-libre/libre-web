@@ -32,6 +32,9 @@ export function getMenu(id) {
 
 export function editMenu(data) {
   return request({
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
     url: 'sys/role/edit_menu',
     method: 'post',
     data,

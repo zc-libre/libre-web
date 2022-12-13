@@ -39,7 +39,7 @@ export function getSupMenus(data) {
 
 export function getMenusTree() {
   return request({
-    url: 'sys/menu/all',
+    url: '/sys/menu/all',
     method: 'get',
   })
 }
