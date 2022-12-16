@@ -6,8 +6,19 @@
     @close="close"
   >
     <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-      <el-form-item label="权限码" prop="permission">
+      <el-form-item label="角色名称" prop="name">
+        <el-input v-model="form.roleName" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="角色标识" prop="permission">
         <el-input v-model="form.permission" autocomplete="off"></el-input>
+      </el-form-item>
+      <el-form-item label="排序" prop="seq">
+        <el-input-number
+          v-model="form.seq"
+          controls-position="right"
+          :min="1"
+          :max="10"
+        />
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
@@ -21,11 +32,12 @@
   import { doEdit } from '@/api/role'
 
   export default {
-    name: 'RoleManagementEdit',
+    name: 'RoleEdit',
     data() {
       return {
         form: {
           id: '',
+          seq: 0,
         },
         rules: {
           permission: [
@@ -48,8 +60,7 @@
         this.dialogFormVisible = true
       },
       close() {
-        this.$refs['form'].resetFields()
-        this.form = this.$options.data().form
+        this.form = {}
         this.dialogFormVisible = false
       },
       save() {

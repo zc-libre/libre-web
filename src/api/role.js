@@ -1,10 +1,17 @@
 import request from '@/utils/request'
 
-export function getList(data) {
+export function getPage(data) {
   return request({
-    url: '/sys/role/list',
+    url: '/sys/role/page',
     method: 'post',
     data,
+  })
+}
+
+export function getList() {
+  return request({
+    url: '/sys/role/list',
+    method: 'get',
   })
 }
 
@@ -42,8 +49,11 @@ export function editMenu(data) {
 }
 export function doDelete(data) {
   return request({
-    url: '/sys/role/delete',
-    method: 'post',
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+    url: '/sys/role',
+    method: 'delete',
     data,
   })
 }

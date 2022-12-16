@@ -33,12 +33,7 @@
       :element-loading-text="elementLoadingText"
       @selection-change="setSelectRows"
     >
-      <el-table-column show-overflow-tooltip type="selection"></el-table-column>
-      <el-table-column
-        show-overflow-tooltip
-        prop="id"
-        label="id"
-      ></el-table-column>
+      <el-table-column show-overflow-tooltip type="selection" />
       <el-table-column
         show-overflow-tooltip
         prop="username"
@@ -90,7 +85,7 @@
 
 <script>
   import { getList, doDelete } from '@/api/sysUser'
-  import Edit from './components/UserManagementEdit'
+  import Edit from './components/UserEdit.vue'
 
   export default {
     name: 'UserManagement',
@@ -119,6 +114,7 @@
       },
       handleEdit(row) {
         if (row.id) {
+          row.roleIds = row.roles.map((role) => role.id)
           this.$refs['edit'].showEdit(row)
         } else {
           this.$refs['edit'].showEdit()
@@ -127,7 +123,9 @@
       handleDelete(row) {
         if (row.id) {
           this.$baseConfirm('你确定要删除当前项吗', null, async () => {
-            const { msg } = await doDelete({ ids: row.id })
+            const ids = []
+            ids.push(row.id)
+            const { msg } = await doDelete(JSON.stringify(ids))
             this.$baseMessage(msg, 'success')
             await this.fetchData()
           })

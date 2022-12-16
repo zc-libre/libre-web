@@ -52,11 +52,6 @@
             ></el-table-column>
             <el-table-column
               show-overflow-tooltip
-              prop="id"
-              label="id"
-            ></el-table-column>
-            <el-table-column
-              show-overflow-tooltip
               prop="roleName"
               label="角色名称"
             ></el-table-column>
@@ -131,8 +126,8 @@
 </template>
 
 <script>
-  import { getList, doDelete, editMenu, getMenu, get } from '@/api/role'
-  import Edit from './components/RoleManagementEdit'
+  import { getPage, doDelete, editMenu, getMenu, get } from '@/api/role'
+  import Edit from './components/RoleEdit.vue'
   import { getMenusTree } from '@/api/menu'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import arrayToTree from 'array-to-tree'
@@ -185,17 +180,19 @@
         }
       },
       handleDelete(row) {
+        let ids = []
         if (row.id) {
           this.$baseConfirm('你确定要删除当前项吗', null, async () => {
-            const { msg } = await doDelete({ ids: row.id })
+            ids.push(row.id)
+            const { msg } = await doDelete(JSON.stringify(ids))
             this.$baseMessage(msg, 'success')
             await this.fetchData()
           })
         } else {
           if (this.selectRows.length > 0) {
-            const ids = this.selectRows.map((item) => item.id).join()
+            ids = this.selectRows.map((item) => item.id)
             this.$baseConfirm('你确定要删除选中项吗', null, async () => {
-              const { msg } = await doDelete({ ids })
+              const { msg } = await doDelete(JSON.stringify(ids))
               this.$baseMessage(msg, 'success')
               await this.fetchData()
             })
@@ -237,7 +234,7 @@
       },
       async fetchData() {
         this.listLoading = true
-        const res = await getList(this.queryForm)
+        const res = await getPage(this.queryForm)
         this.list = res.data.records
         this.total = res.data.total
         setTimeout(() => {

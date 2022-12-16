@@ -181,7 +181,6 @@
         if (this.form.id) {
           const data = []
           data.push(Number.parseInt(this.form.id))
-          console.log(JSON.stringify(data))
           this.getSupMenus(data)
         } else {
           this.getSupMenus([])

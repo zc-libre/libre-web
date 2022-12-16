@@ -10,16 +10,26 @@ export function getList(data) {
 
 export function doEdit(data) {
   return request({
-    url: '/sys/role/edit',
+    url: '/sys/user/edit',
     method: 'post',
     data,
   })
 }
 
+export function save(data) {
+  return request({
+    url: '/sys/user/save',
+    method: 'put',
+    data,
+  })
+}
 export function doDelete(data) {
   return request({
-    url: '/sys/role/delete',
-    method: 'post',
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+    url: '/sys/user',
+    method: 'delete',
     data,
   })
 }
