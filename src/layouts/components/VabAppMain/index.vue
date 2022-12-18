@@ -45,7 +45,7 @@
         return cachedRoutesArr
       },
       key() {
-        return this.$route.path
+        return this.$route.path + Math.random()
       },
     },
     watch: {

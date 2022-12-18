@@ -180,7 +180,7 @@
       init() {
         if (this.form.id) {
           const data = []
-          data.push(Number.parseInt(this.form.id))
+          data.push(this.form.id)
           this.getSupMenus(data)
         } else {
           this.getSupMenus([])

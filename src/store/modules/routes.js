@@ -5,7 +5,7 @@
 import { asyncRoutes, constantRoutes } from '@/router'
 import { getRouterList } from '@/api/router'
 import { convertRouter, filterAsyncRoutes } from '@/utils/handleRoutes'
-
+import arrayToTree from 'array-to-tree'
 const state = () => ({
   routes: [],
   partialRoutes: [],
@@ -34,8 +34,9 @@ const actions = {
   },
   async setAllRoutes({ commit }) {
     let { data } = await getRouterList()
+    const routerTree = arrayToTree(data, { parentProperty: 'parentId' })
     data.push({ path: '*', redirect: '/404', hidden: true })
-    let accessRoutes = convertRouter(data)
+    let accessRoutes = convertRouter(routerTree)
     commit('setAllRoutes', accessRoutes)
     return accessRoutes
   },

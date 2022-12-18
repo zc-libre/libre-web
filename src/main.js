@@ -5,18 +5,13 @@ import router from './router'
 import './plugins'
 import '@/layouts/export'
 import './assets/icons' // icon
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 生产环境默认都使用mock，如果正式用于生产环境时，记得去掉
- */
 
-if (process.env.NODE_ENV === 'production') {
-  const { mockXHR } = require('@/utils/static')
-  mockXHR()
-}
+import VueHighlightJS from 'vue-highlightjs'
+import 'highlight.js/styles/atom-one-dark.css'
 
 Vue.config.productionTip = false
 
+Vue.use(VueHighlightJS)
 new Vue({
   el: '#vue-admin-beautiful',
   router,
