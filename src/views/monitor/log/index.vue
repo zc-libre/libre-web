@@ -39,7 +39,7 @@
           </el-form>
         </template>
       </el-table-column>
-      <el-table-column prop="userName" label="用户名" />
+      <el-table-column prop="username" label="用户名" />
       <el-table-column prop="requestIp" label="IP" />
       <el-table-column
         :show-overflow-tooltip="true"
@@ -81,7 +81,7 @@
     name: 'LogMonitor',
     components: { Search, crudOperation, pagination },
     cruds() {
-      return CRUD({ title: '日志', url: 'system/logs/info' })
+      return CRUD({ title: '日志', url: 'api/sys/log/info' })
     },
     mixins: [presenter()],
     created() {

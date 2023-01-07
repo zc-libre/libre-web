@@ -39,7 +39,7 @@
           </el-form>
         </template>
       </el-table-column>
-      <el-table-column prop="userName" label="用户名" />
+      <el-table-column prop="username" label="用户名" />
       <el-table-column prop="requestIp" label="IP" />
       <el-table-column
         :show-overflow-tooltip="true"
@@ -48,13 +48,9 @@
       />
       <el-table-column prop="description" label="描述" />
       <el-table-column prop="browser" label="浏览器" />
-      <el-table-column prop="createTime" label="创建日期">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createdAt) }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column prop="gmtCreate" label="创建日期" />
       <el-table-column label="异常详情" width="100px">
-        <template slot-scope="scope">
+        <template #default="scope">
           <el-button size="mini" type="text" @click="info(scope.row.id)">
             查看详情
           </el-button>
@@ -86,7 +82,7 @@
     name: 'ErrorLogMonitor',
     components: { Search, crudOperation, pagination },
     cruds() {
-      return CRUD({ title: '异常日志', url: 'system/logs/error' })
+      return CRUD({ title: '异常日志', url: 'api/sys/log/error' })
     },
     mixins: [presenter()],
     data() {
@@ -108,7 +104,7 @@
       info(id) {
         this.dialog = true
         getErrDetail(id).then((res) => {
-          this.errorInfo = res.exceptionDetail
+          this.errorInfo = res.stackTrace
         })
       },
       confirmDelAll() {
