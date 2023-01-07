@@ -1,26 +1,24 @@
-# .gitignore
 .DS_Store
-node_modules
-dist
-.env.local
-.env.*.local
+node_modules/
+dist/
 npm-debug.log*
-yarn.lock
 yarn-debug.log*
 yarn-error.log*
+**/*.log
+
+tests/**/coverage/
+tests/e2e/reports
+selenium-debug.log
+
+# Editor directories and files
 .idea
+.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-public/video
-*.zip
-*.7z
-/src/layouts/components/zx-layouts
-/zx-templates
-/package-lock.json
-/src/styles/themes/green.scss
-/src/styles/themes/dark.scss
-/src/styles/themes/glory.scss
-/.history
+*.local
+
+# node
+package-lock.json
+yarn.lock

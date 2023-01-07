@@ -1,32 +1,91 @@
 <template>
-  <div class="roleManagement-container">
-    <vab-query-form>
-      <vab-query-form-left-panel :span="12">
-        <el-button icon="el-icon-plus" type="primary" @click="handleEdit">
-          添加
+  <div class="app-container">
+    <!--工具栏-->
+    <div class="head-container">
+      <div v-if="crud.props.searchToggle">
+        <!-- 搜索 -->
+        <el-input
+          v-model="query.blurry"
+          size="small"
+          clearable
+          placeholder="输入名称或者描述搜索"
+          style="width: 200px"
+          class="filter-item"
+          @keyup.enter.native="crud.toQuery"
+        />
+        <el-date-picker
+          v-model="query.createTime"
+          :default-time="['00:00:00', '23:59:59']"
+          type="daterange"
+          range-separator=":"
+          size="small"
+          class="date-item"
+          value-format="yyyy-MM-dd HH:mm:ss"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        />
+        <rrOperation />
+      </div>
+      <crudOperation :permission="permission" />
+    </div>
+    <!-- 表单渲染 -->
+    <el-dialog
+      append-to-body
+      :close-on-click-modal="false"
+      :before-close="crud.cancelCU"
+      :visible.sync="crud.status.cu > 0"
+      :title="crud.status.title"
+      width="520px"
+    >
+      <el-form
+        ref="form"
+        :inline="true"
+        :model="form"
+        :rules="rules"
+        size="small"
+        label-width="80px"
+      >
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="form.roleName" style="width: 380px" />
+        </el-form-item>
+        <el-form-item label="标识" prop="permission">
+          <el-input
+            v-model="form.permission"
+            :disabled="form.permission === 'admin'"
+            style="width: 380px"
+          />
+        </el-form-item>
+        <el-form-item label="排序" prop="seq">
+          <el-input-number
+            v-model.number="form.seq"
+            :min="0"
+            :max="999"
+            controls-position="right"
+            style="width: 380px"
+          />
+        </el-form-item>
+        <!--        <el-form-item label="描述信息" prop="remark">-->
+        <!--          <el-input-->
+        <!--            v-model="form.remark"-->
+        <!--            style="width: 380px"-->
+        <!--            rows="5"-->
+        <!--            type="textarea"-->
+        <!--          />-->
+        <!--        </el-form-item>-->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="text" @click="crud.cancelCU">取消</el-button>
+        <el-button
+          :loading="crud.status.cu === 2"
+          type="primary"
+          @click="crud.submitCU"
+        >
+          确认
         </el-button>
-        <el-button icon="el-icon-delete" type="danger" @click="handleDelete">
-          批量删除
-        </el-button>
-      </vab-query-form-left-panel>
-      <vab-query-form-right-panel :span="12">
-        <el-form :inline="true" :model="queryForm" @submit.native.prevent>
-          <el-form-item>
-            <el-input
-              v-model.trim="queryForm.blurry"
-              placeholder="请输入查询条件"
-              clearable
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button icon="el-icon-search" type="primary" @click="queryData">
-              查询
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </vab-query-form-right-panel>
-    </vab-query-form>
+      </div>
+    </el-dialog>
     <el-row :gutter="15">
+      <!--角色管理-->
       <el-col
         :xs="24"
         :sm="24"
@@ -40,52 +99,50 @@
             <span class="role-span">角色列表</span>
           </div>
           <el-table
-            v-loading="listLoading"
-            :data="list"
-            :element-loading-text="elementLoadingText"
-            @selection-change="setSelectRows"
-            @current-change="handleChange"
+            ref="table"
+            v-loading="crud.loading"
+            highlight-current-row
+            style="width: 100%"
+            :data="crud.data"
+            @selection-change="crud.selectionChangeHandler"
+            @current-change="handleCurrentChange"
           >
             <el-table-column
-              show-overflow-tooltip
+              :selectable="checkboxT"
               type="selection"
-            ></el-table-column>
+              width="55"
+            />
+            <el-table-column prop="roleName" label="名称" />
+            <el-table-column prop="permission" label="标识" />
+            <el-table-column prop="seq" label="排序" />
             <el-table-column
-              show-overflow-tooltip
-              prop="roleName"
-              label="角色名称"
-            ></el-table-column>
+              :show-overflow-tooltip="true"
+              prop="remark"
+              label="描述"
+            />
             <el-table-column
-              show-overflow-tooltip
-              prop="permission"
-              label="权限码"
-            ></el-table-column>
-            <el-table-column
-              show-overflow-tooltip
+              :show-overflow-tooltip="true"
+              width="135px"
               prop="gmtCreate"
-              label="创建时间"
-            ></el-table-column>
-            <el-table-column show-overflow-tooltip label="操作" width="200">
-              <template #default="{ row }">
-                <el-button type="text" @click="handleEdit(row)">编辑</el-button>
-                <el-button type="text" @click="handleDelete(row)">
-                  删除
-                </el-button>
+              label="创建日期"
+            />
+            <el-table-column
+              v-permission="['admin', 'roles:edit', 'roles:del']"
+              label="操作"
+              width="130px"
+              align="center"
+              fixed="right"
+            >
+              <template #default="scope">
+                <udOperation :data="scope.row" :permission="permission" />
               </template>
             </el-table-column>
           </el-table>
-          <el-pagination
-            background
-            :current-page="queryForm.pageNo"
-            :page-size="queryForm.pageSize"
-            :layout="layout"
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          ></el-pagination>
-          <edit ref="edit" @fetch-data="fetchData"></edit>
+          <!--分页组件-->
+          <pagination />
         </el-card>
       </el-col>
+      <!-- 菜单授权 -->
       <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="7">
         <el-card class="box-card" shadow="never">
           <div slot="header" class="clearfix">
@@ -98,6 +155,7 @@
               <span class="role-span">菜单分配</span>
             </el-tooltip>
             <el-button
+              v-permission="['admin', 'system:roles:edit']"
               :disabled="!showButton"
               :loading="menuLoading"
               icon="el-icon-check"
@@ -126,15 +184,40 @@
 </template>
 
 <script>
-  import { getPage, doDelete, editMenu, getMenu, get } from '@/api/role'
-  import Edit from './components/RoleEdit.vue'
-  import { getMenusTree } from '@/api/menu'
+  import crudRoles from '@/api/system/role'
+  import { getMenusTree } from '@/api/system/menu'
+  import CRUD, { presenter, header, form, crud } from '@crud/crud'
+  import rrOperation from '@crud/RR.operation'
+  import crudOperation from '@crud/CRUD.operation'
+  import udOperation from '@crud/UD.operation'
+  import pagination from '@crud/Pagination'
+  import Treeselect from '@riophae/vue-treeselect'
   import '@riophae/vue-treeselect/dist/vue-treeselect.css'
   import arrayToTree from 'array-to-tree'
 
+  const defaultForm = {
+    id: null,
+    roleName: null,
+    seq: 999,
+  }
   export default {
-    name: 'RoleManagement',
-    components: { Edit },
+    name: 'Role',
+    components: {
+      Treeselect,
+      pagination,
+      crudOperation,
+      rrOperation,
+      udOperation,
+    },
+    cruds() {
+      return CRUD({
+        title: '角色',
+        url: '/api/sys/role/page',
+        sort: 'seq,desc',
+        crudMethod: { ...crudRoles },
+      })
+    },
+    mixins: [presenter(), header(), form(defaultForm), crud()],
     data() {
       return {
         defaultProps: { children: 'children', label: 'title', isLeaf: 'leaf' },
@@ -143,74 +226,39 @@
         showButton: false,
         menus: [],
         menuIds: [],
-        list: null,
-        listLoading: true,
-        layout: 'total, sizes, prev, pager, next, jumper',
-        total: 0,
-        selectRows: '',
-        elementLoadingText: '正在加载...',
-        queryForm: {
-          pageNo: 1,
-          pageSize: 10,
-          blurry: '',
+        permission: {
+          add: ['admin', 'system:role:add'],
+          edit: ['admin', 'system:role:edit'],
+          del: ['admin', 'system:role:del'],
+        },
+        rules: {
+          roleName: [
+            { required: true, message: '请输入名称', trigger: 'blur' },
+          ],
+          title: [{ required: true, message: '请输入标识', trigger: 'blur' }],
+          permission: [
+            { required: true, message: '请输入权限', trigger: 'blur' },
+          ],
         },
       }
     },
     created() {
-      this.fetchData()
+      // 菜单配置
       this.getMenuDatas()
     },
     methods: {
       getMenuDatas() {
         setTimeout(() => {
           getMenusTree().then((res) => {
-            this.menus = arrayToTree(res.data, { parentProperty: 'parentId' })
+            this.menus = arrayToTree(res, { parentProperty: 'parentId' })
           })
         }, 100)
       },
-      setSelectRows(val) {
-        this.selectRows = val
+      [CRUD.HOOK.afterRefresh]() {
+        this.$refs.menu.setCheckedKeys([])
       },
-
-      handleEdit(row) {
-        if (row.id) {
-          this.$refs['edit'].showEdit(row)
-        } else {
-          this.$refs['edit'].showEdit()
-        }
-      },
-      handleDelete(row) {
-        let ids = []
-        if (row.id) {
-          this.$baseConfirm('你确定要删除当前项吗', null, async () => {
-            ids.push(row.id)
-            const { msg } = await doDelete(JSON.stringify(ids))
-            this.$baseMessage(msg, 'success')
-            await this.fetchData()
-          })
-        } else {
-          if (this.selectRows.length > 0) {
-            ids = this.selectRows.map((item) => item.id)
-            this.$baseConfirm('你确定要删除选中项吗', null, async () => {
-              const { msg } = await doDelete(JSON.stringify(ids))
-              this.$baseMessage(msg, 'success')
-              await this.fetchData()
-            })
-          } else {
-            this.$baseMessage('未选中任何行', 'error')
-            return false
-          }
-        }
-      },
-      handleSizeChange(val) {
-        this.queryForm.pageSize = val
-        this.fetchData()
-      },
+      // 触发单选
       handleCurrentChange(val) {
-        this.queryForm.pageNo = val
-        this.fetchData()
-      },
-      handleChange(val) {
         if (val) {
           const _this = this
           // 清空菜单的选中
@@ -219,38 +267,15 @@
           this.currentId = val.id
           // 初始化
           this.menuIds = []
-          getMenu(val.id).then((res) => {
-            res.data.forEach(function (data, index) {
+          // 菜单数据需要特殊处理
+          crudRoles.getMenu(val.id).then((res) => {
+            res.forEach(function (data, index) {
               _this.menuIds.push(data.id)
             })
             _this.$refs.menu.setCheckedKeys(_this.menuIds)
             _this.showButton = true
           })
         }
-      },
-      queryData() {
-        this.queryForm.pageNo = 1
-        this.fetchData()
-      },
-      async fetchData() {
-        this.listLoading = true
-        const res = await getPage(this.queryForm)
-        this.list = res.data.records
-        this.total = res.data.total
-        setTimeout(() => {
-          this.listLoading = false
-        }, 300)
-      },
-      update() {
-        // 无刷新更新 表格数据
-        get(this.currentId).then((res) => {
-          for (let i = 0; i < this.list.length; i++) {
-            if (res.id === this.list[i].id) {
-              this.list[i] = res
-              break
-            }
-          }
-        })
       },
       // 保存菜单
       saveMenu() {
@@ -264,9 +289,10 @@
         this.$refs.menu.getCheckedKeys().forEach(function (data, index) {
           role.menuIds.push(data)
         })
-        editMenu(role)
+        crudRoles
+          .editMenu(role)
           .then((res) => {
-            this.$baseMessage('保存成功', 'success')
+            this.crud.notify('保存成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
             this.menuLoading = false
             this.update()
           })
@@ -275,6 +301,49 @@
             console.log(err.response.data.message)
           })
       },
+      // 改变数据
+      update() {
+        // 无刷新更新 表格数据
+        crudRoles.get(this.currentId).then((res) => {
+          for (let i = 0; i < this.crud.data.length; i++) {
+            if (res.id === this.crud.data[i].id) {
+              this.crud.data[i] = res
+              break
+            }
+          }
+        })
+      },
+      checkboxT(row, rowIndex) {
+        return true
+      },
+      normalizer(node) {
+        return {
+          id: node.id,
+          label: node.name,
+          children: node.children,
+        }
+      },
     },
   }
 </script>
+
+<style rel="stylesheet/scss" lang="scss">
+  .role-span {
+    font-weight: bold;
+    color: #303133;
+    font-size: 15px;
+  }
+</style>
+
+<style rel="stylesheet/scss" lang="scss" scoped>
+  ::v-deep .el-input-number .el-input__inner {
+    text-align: left;
+  }
+  ::v-deep .vue-treeselect__multi-value {
+    margin-bottom: 0;
+  }
+  ::v-deep .vue-treeselect__multi-value-item {
+    border: 0;
+    padding: 0;
+  }
+</style>

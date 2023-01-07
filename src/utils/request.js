@@ -1,127 +1,94 @@
-import Vue from 'vue'
 import axios from 'axios'
-import {
-  baseURL,
-  contentType,
-  debounce,
-  invalidCode,
-  noPermissionCode,
-  requestTimeout,
-  successCode,
-  tokenName,
-  loginInterception,
-} from '@/config'
-import store from '@/store'
-import qs from 'qs'
-import router from '@/router'
-import { isArray } from '@/utils/validate'
+import router from '@/router/routers'
+import { Notification, MessageBox } from 'element-ui'
+import store from '../store'
+import { getToken } from '@/utils/auth'
+import Config from '@/settings'
 
-let loadingInstance
+// 默认json
+axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 处理code异常
- * @param {*} code
- * @param {*} msg
- */
-const handleCode = (code, msg) => {
-  switch (code) {
-    case invalidCode:
-      Vue.prototype.$baseMessage(msg || `后端接口${code}异常`, 'error')
-      store.dispatch('user/resetAccessToken').catch(() => {})
-      if (loginInterception) {
-        location.reload()
-      }
-      break
-    case noPermissionCode:
-      router.push({ path: '/401' }).catch(() => {})
-      break
-    default:
-      Vue.prototype.$baseMessage(msg || `后端接口${code}异常`, 'error')
-      break
-  }
-}
-
-const instance = axios.create({
-  baseURL,
-  timeout: requestTimeout,
-  headers: {
-    'Content-Type': contentType,
-  },
+// 创建axios实例
+const service = axios.create({
+  baseURL:
+    process.env.NODE_ENV === 'production' ? process.env.VUE_APP_BASE_API : '/', // api 的 base_url
+  timeout: Config.timeout, // 请求超时时间
 })
 
-instance.interceptors.request.use(
+// request拦截器
+service.interceptors.request.use(
   (config) => {
-    if (store.getters['user/accessToken']) {
-      config.headers[tokenName] = 'Bearer ' + store.getters['user/accessToken']
+    if (getToken()) {
+      config.headers['Authorization'] = 'Bearer ' + getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
     }
-    // //这里会过滤所有为空、0、false的key，如果不需要请自行注释
-    // if (config.data)
-    //   config.data = Vue.prototype.$baseLodash.pickBy(
-    //     config.data,
-    //     Vue.prototype.$baseLodash.identity
-    //   )
-    if (
-      config.data &&
-      config.headers['Content-Type'] ===
-        'application/x-www-form-urlencoded;charset=UTF-8'
-    ) {
-      if (!(config.data instanceof String))
-        config.data = qs.stringify(config.data)
-    }
-    if (debounce.some((item) => config.url.includes(item)))
-      loadingInstance = Vue.prototype.$baseLoading()
     return config
   },
   (error) => {
-    return Promise.reject(error)
+    // Do something with request error
+    console.log(error) // for debug
+    Promise.reject(error)
   }
 )
 
-instance.interceptors.response.use(
+// response 拦截器
+service.interceptors.response.use(
   (response) => {
-    if (loadingInstance) loadingInstance.close()
-
-    const { data, config } = response
-    const { code, msg } = data
-    // 操作正常Code数组
-    const codeVerificationArray = isArray(successCode)
-      ? [...successCode]
-      : [...[successCode]]
-    // 是否操作正常
-    if (codeVerificationArray.includes(code)) {
-      return data
+    const code = response.status
+    if (code < 200 || code > 300) {
+      Notification.error({
+        title: response.data.msg,
+      })
+      return Promise.reject('error')
     } else {
-      handleCode(code, msg)
-      return Promise.reject(
-        'vue-admin-beautiful请求异常拦截:' +
-          JSON.stringify({ url: config.url, code, msg }) || 'Error'
-      )
+      return response.data.data
     }
   },
   (error) => {
-    if (loadingInstance) loadingInstance.close()
-    const { response, message } = error
-    if (error.response && error.response.data) {
-      const { status, data } = response
-      handleCode(status, data.msg || message)
-      return Promise.reject(error)
-    } else {
-      let { message } = error
-      if (message === 'Network Error') {
-        message = '后端接口连接异常'
+    let code = 0
+    try {
+      code = error.response.status
+    } catch (e) {
+      if (error.toString().indexOf('Error: timeout') !== -1) {
+        Notification.error({
+          title: '网络请求超时',
+          duration: 5000,
+        })
+        return Promise.reject(error)
       }
-      if (message.includes('timeout')) {
-        message = '后端接口请求超时'
-      }
-      if (message.includes('Request failed with status code')) {
-        const code = message.substr(message.length - 3)
-        message = '后端接口' + code + '异常'
-      }
-      Vue.prototype.$baseMessage(message || `后端接口未知异常`, 'error')
-      return Promise.reject(error)
     }
+    if (code) {
+      if (code === 401) {
+        MessageBox.confirm(
+          '登录状态已过期，您可以继续留在该页面，或者重新登录',
+          '系统提示',
+          {
+            confirmButtonText: '重新登录',
+            cancelButtonText: '取消',
+            type: 'warning',
+          }
+        ).then(() => {
+          store.dispatch('LogOut').then(() => {
+            location.reload() // 为了重新实例化vue-router对象 避免bug
+          })
+        })
+      } else if (code === 403) {
+        router.push({ path: '/401' })
+      } else {
+        const errorMsg = error.response.data.msg
+        if (errorMsg !== undefined) {
+          Notification.error({
+            title: errorMsg,
+            duration: 5000,
+          })
+        }
+      }
+    } else {
+      Notification.error({
+        title: '接口请求失败',
+        duration: 5000,
+      })
+    }
+    return Promise.reject(error)
   }
 )
-
-export default instance
+export default service

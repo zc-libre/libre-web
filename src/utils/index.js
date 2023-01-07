@@ -1,9 +1,12 @@
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 格式化时间
- * @param time
- * @param cFormat
- * @returns {string|null}
+ * Created by PanJiaChen on 16/11/18.
+ */
+
+/**
+ * Parse the time to string
+ * @param {(Object|string|number)} time
+ * @param {string} cFormat
+ * @returns {string}
  */
 export function parseTime(time, cFormat) {
   if (arguments.length === 0) {
@@ -11,7 +14,9 @@ export function parseTime(time, cFormat) {
   }
   const format = cFormat || '{y}-{m}-{d} {h}:{i}:{s}'
   let date
-  if (typeof time === 'object') {
+  if (typeof time === 'undefined' || time === null || time === 'null') {
+    return ''
+  } else if (typeof time === 'object') {
     date = time
   } else {
     if (typeof time === 'string' && /^[0-9]+$/.test(time)) {
@@ -33,6 +38,7 @@ export function parseTime(time, cFormat) {
   }
   const time_str = format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
     let value = formatObj[key]
+    // Note: getDay() returns 0 on Sunday
     if (key === 'a') {
       return ['日', '一', '二', '三', '四', '五', '六'][value]
     }
@@ -45,10 +51,8 @@ export function parseTime(time, cFormat) {
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 格式化时间
- * @param time
- * @param option
+ * @param {number} time
+ * @param {string} option
  * @returns {string}
  */
 export function formatTime(time, option) {
@@ -90,12 +94,73 @@ export function formatTime(time, option) {
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 将url请求参数转为json格式
- * @param url
- * @returns {{}|any}
+ * @param {string} url
+ * @returns {Object}
  */
-export function paramObj(url) {
+export function getQueryObject(url) {
+  url = url == null ? window.location.href : url
+  const search = url.substring(url.lastIndexOf('?') + 1)
+  const obj = {}
+  const reg = /([^?&=]+)=([^?&=]*)/g
+  search.replace(reg, (rs, $1, $2) => {
+    const name = decodeURIComponent($1)
+    let val = decodeURIComponent($2)
+    val = String(val)
+    obj[name] = val
+    return rs
+  })
+  return obj
+}
+
+/**
+ * @param {string} input value
+ * @returns {number} output value
+ */
+export function byteLength(str) {
+  // returns the byte length of an utf8 string
+  let s = str.length
+  for (var i = str.length - 1; i >= 0; i--) {
+    const code = str.charCodeAt(i)
+    if (code > 0x7f && code <= 0x7ff) s++
+    else if (code > 0x7ff && code <= 0xffff) s += 2
+    if (code >= 0xdc00 && code <= 0xdfff) i--
+  }
+  return s
+}
+
+/**
+ * @param {Array} actual
+ * @returns {Array}
+ */
+export function cleanArray(actual) {
+  const newArray = []
+  for (let i = 0; i < actual.length; i++) {
+    if (actual[i]) {
+      newArray.push(actual[i])
+    }
+  }
+  return newArray
+}
+
+/**
+ * @param {Object} json
+ * @returns {Array}
+ */
+export function param(json) {
+  if (!json) return ''
+  return cleanArray(
+    Object.keys(json).map((key) => {
+      if (json[key] === undefined) return ''
+      return encodeURIComponent(key) + '=' + encodeURIComponent(json[key])
+    })
+  ).join('&')
+}
+
+/**
+ * @param {string} url
+ * @returns {Object}
+ */
+export function param2Obj(url) {
   const search = url.split('?')[1]
   if (!search) {
     return {}
@@ -112,155 +177,279 @@ export function paramObj(url) {
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 父子关系的数组转换成树形结构数据
- * @param data
- * @returns {*}
+ * @param {string} val
+ * @returns {string}
  */
-export function translateDataToTree(data) {
-  const parent = data.filter(
-    (value) => value.parentId === 'undefined' || value.parentId == null
-  )
-  const children = data.filter(
-    (value) => value.parentId !== 'undefined' && value.parentId != null
-  )
-  const translator = (parent, children) => {
-    parent.forEach((parent) => {
-      children.forEach((current, index) => {
-        if (current.parentId === parent.id) {
-          const temp = JSON.parse(JSON.stringify(children))
-          temp.splice(index, 1)
-          translator([current], temp)
-          typeof parent.children !== 'undefined'
-            ? parent.children.push(current)
-            : (parent.children = [current])
-        }
-      })
-    })
-  }
-  translator(parent, children)
-  return parent
+export function html2Text(val) {
+  const div = document.createElement('div')
+  div.innerHTML = val
+  return div.textContent || div.innerText
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 树形结构数据转换成父子关系的数组
- * @param data
- * @returns {[]}
+ * Merges two objects, giving the last one precedence
+ * @param {Object} target
+ * @param {(Object|Array)} source
+ * @returns {Object}
  */
-export function translateTreeToData(data) {
-  const result = []
-  data.forEach((item) => {
-    const loop = (data) => {
-      result.push({
-        id: data.id,
-        name: data.name,
-        parentId: data.parentId,
-      })
-      const child = data.children
-      if (child) {
-        for (let i = 0; i < child.length; i++) {
-          loop(child[i])
-        }
+export function objectMerge(target, source) {
+  if (typeof target !== 'object') {
+    target = {}
+  }
+  if (Array.isArray(source)) {
+    return source.slice()
+  }
+  Object.keys(source).forEach((property) => {
+    const sourceProperty = source[property]
+    if (typeof sourceProperty === 'object') {
+      target[property] = objectMerge(target[property], sourceProperty)
+    } else {
+      target[property] = sourceProperty
+    }
+  })
+  return target
+}
+
+/**
+ * @param {HTMLElement} element
+ * @param {string} className
+ */
+export function toggleClass(element, className) {
+  if (!element || !className) {
+    return
+  }
+  let classString = element.className
+  const nameIndex = classString.indexOf(className)
+  if (nameIndex === -1) {
+    classString += '' + className
+  } else {
+    classString =
+      classString.substr(0, nameIndex) +
+      classString.substr(nameIndex + className.length)
+  }
+  element.className = classString
+}
+
+/**
+ * @param {string} type
+ * @returns {Date}
+ */
+export function getTime(type) {
+  if (type === 'start') {
+    return new Date().getTime() - 3600 * 1000 * 24 * 90
+  } else {
+    return new Date(new Date().toDateString())
+  }
+}
+
+/**
+ * @param {Function} func
+ * @param {number} wait
+ * @param {boolean} immediate
+ * @return {*}
+ */
+export function debounce(func, wait, immediate) {
+  let timeout, args, context, timestamp, result
+
+  const later = function () {
+    // 据上一次触发时间间隔
+    const last = +new Date() - timestamp
+
+    // 上次被包装函数被调用时间间隔 last 小于设定时间间隔 wait
+    if (last < wait && last > 0) {
+      timeout = setTimeout(later, wait - last)
+    } else {
+      timeout = null
+      // 如果设定为immediate===true，因为开始边界已经调用过了此处无需调用
+      if (!immediate) {
+        result = func.apply(context, args)
+        if (!timeout) context = args = null
       }
     }
-    loop(item)
+  }
+
+  return function (...args) {
+    context = this
+    timestamp = +new Date()
+    const callNow = immediate && !timeout
+    // 如果延时不存在，重新设定延时
+    if (!timeout) timeout = setTimeout(later, wait)
+    if (callNow) {
+      result = func.apply(context, args)
+      context = args = null
+    }
+
+    return result
+  }
+}
+
+/**
+ * This is just a simple version of deep copy
+ * Has a lot of edge cases bug
+ * If you want to use a perfect deep copy, use lodash's _.cloneDeep
+ * @param {Object} source
+ * @returns {Object}
+ */
+export function deepClone(source) {
+  if (!source && typeof source !== 'object') {
+    throw new Error('error arguments', 'deepClone')
+  }
+  const targetObj = source.constructor === Array ? [] : {}
+  Object.keys(source).forEach((keys) => {
+    if (source[keys] && typeof source[keys] === 'object') {
+      targetObj[keys] = deepClone(source[keys])
+    } else {
+      targetObj[keys] = source[keys]
+    }
   })
-  return result
+  return targetObj
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 10位时间戳转换
- * @param time
- * @returns {string}
+ * @param {Array} arr
+ * @returns {Array}
  */
-export function tenBitTimestamp(time) {
-  const date = new Date(time * 1000)
-  const y = date.getFullYear()
-  let m = date.getMonth() + 1
-  m = m < 10 ? '' + m : m
-  let d = date.getDate()
-  d = d < 10 ? '' + d : d
-  let h = date.getHours()
-  h = h < 10 ? '0' + h : h
-  let minute = date.getMinutes()
-  let second = date.getSeconds()
-  minute = minute < 10 ? '0' + minute : minute
-  second = second < 10 ? '0' + second : second
-  return y + '年' + m + '月' + d + '日 ' + h + ':' + minute + ':' + second //组合
+export function uniqueArr(arr) {
+  return Array.from(new Set(arr))
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 13位时间戳转换
- * @param time
  * @returns {string}
  */
-export function thirteenBitTimestamp(time) {
-  const date = new Date(time / 1)
-  const y = date.getFullYear()
-  let m = date.getMonth() + 1
-  m = m < 10 ? '' + m : m
-  let d = date.getDate()
-  d = d < 10 ? '' + d : d
-  let h = date.getHours()
-  h = h < 10 ? '0' + h : h
-  let minute = date.getMinutes()
-  let second = date.getSeconds()
-  minute = minute < 10 ? '0' + minute : minute
-  second = second < 10 ? '0' + second : second
-  return y + '年' + m + '月' + d + '日 ' + h + ':' + minute + ':' + second //组合
+export function createUniqueString() {
+  const timestamp = +new Date() + ''
+  const randomNum = parseInt((1 + Math.random()) * 65536) + ''
+  return (+(randomNum + timestamp)).toString(32)
 }
 
 /**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 获取随机id
- * @param length
- * @returns {string}
+ * Check if an element has a class
+ * @param {HTMLElement} elm
+ * @param {string} cls
+ * @returns {boolean}
  */
-export function uuid(length = 32) {
-  const num = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-  let str = ''
-  for (let i = 0; i < length; i++) {
-    str += num.charAt(Math.floor(Math.random() * num.length))
+export function hasClass(ele, cls) {
+  return !!ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'))
+}
+
+/**
+ * Add class to element
+ * @param {HTMLElement} elm
+ * @param {string} cls
+ */
+export function addClass(ele, cls) {
+  if (!hasClass(ele, cls)) ele.className += ' ' + cls
+}
+
+/**
+ * Remove class from element
+ * @param {HTMLElement} elm
+ * @param {string} cls
+ */
+export function removeClass(ele, cls) {
+  if (hasClass(ele, cls)) {
+    const reg = new RegExp('(\\s|^)' + cls + '(\\s|$)')
+    ele.className = ele.className.replace(reg, ' ')
   }
-  return str
 }
 
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description m到n的随机数
- * @param m
- * @param n
- * @returns {number}
- */
-export function random(m, n) {
-  return Math.floor(Math.random() * (m - n) + n)
-}
-
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description addEventListener
- * @type {function(...[*]=)}
- */
-export const on = (function () {
-  return function (element, event, handler, useCapture = false) {
-    if (element && event && handler) {
-      element.addEventListener(event, handler, useCapture)
+// 替换邮箱字符
+export function regEmail(email) {
+  if (String(email).indexOf('@') > 0) {
+    const str = email.split('@')
+    let _s = ''
+    if (str[0].length > 3) {
+      for (var i = 0; i < str[0].length - 3; i++) {
+        _s += '*'
+      }
     }
+    var new_email = str[0].substr(0, 3) + _s + '@' + str[1]
   }
-})()
+  return new_email
+}
 
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description removeEventListener
- * @type {function(...[*]=)}
- */
-export const off = (function () {
-  return function (element, event, handler, useCapture = false) {
-    if (element && event) {
-      element.removeEventListener(event, handler, useCapture)
-    }
+// 替换手机字符
+export function regMobile(mobile) {
+  if (mobile.length > 7) {
+    var new_mobile = mobile.substr(0, 3) + '****' + mobile.substr(7)
   }
-})()
+  return new_mobile
+}
+
+// 下载文件
+export function downloadFile(obj, name, suffix) {
+  const url = window.URL.createObjectURL(new Blob([obj]))
+  const link = document.createElement('a')
+  link.style.display = 'none'
+  link.href = url
+  const fileName = parseTime(new Date()) + '-' + name + '.' + suffix
+  link.setAttribute('download', fileName)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+export function makeMap(str, expectsLowerCase) {
+  const map = Object.create(null)
+  const list = str.split(',')
+  for (let i = 0; i < list.length; i++) {
+    map[list[i]] = true
+  }
+  return expectsLowerCase ? (val) => map[val.toLowerCase()] : (val) => map[val]
+}
+
+export const exportDefault = 'export default '
+export const beautifierConf = {
+  html: {
+    indent_size: '2',
+    indent_char: ' ',
+    max_preserve_newlines: '-1',
+    preserve_newlines: false,
+    keep_array_indentation: false,
+    break_chained_methods: false,
+    indent_scripts: 'separate',
+    brace_style: 'end-expand',
+    space_before_conditional: true,
+    unescape_strings: false,
+    jslint_happy: false,
+    end_with_newline: true,
+    wrap_line_length: '110',
+    indent_inner_html: true,
+    comma_first: false,
+    e4x: true,
+    indent_empty_lines: true,
+  },
+  js: {
+    indent_size: '2',
+    indent_char: ' ',
+    max_preserve_newlines: '-1',
+    preserve_newlines: false,
+    keep_array_indentation: false,
+    break_chained_methods: false,
+    indent_scripts: 'normal',
+    brace_style: 'end-expand',
+    space_before_conditional: true,
+    unescape_strings: false,
+    jslint_happy: true,
+    end_with_newline: true,
+    wrap_line_length: '110',
+    indent_inner_html: true,
+    comma_first: false,
+    e4x: true,
+    indent_empty_lines: true,
+  },
+}
+
+// 首字母大小
+export function titleCase(str) {
+  return str.replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
+}
+
+// 下划转驼峰
+export function camelCase(str) {
+  return str.replace(/-[a-z]/g, (str1) => str1.substr(-1).toUpperCase())
+}
+
+export function isNumberStr(str) {
+  return /^[+-]?(0|([1-9]\d*))(\.\d+)?$/g.test(str)
+}

@@ -11,6 +11,9 @@
 </template>
 
 <script>
+  // doc: https://panjiachen.github.io/vue-element-admin-site/feature/component/svg-icon.html#usage
+  import { isExternal } from '@/utils/validate'
+
   export default {
     name: 'SvgIcon',
     props: {
@@ -25,7 +28,7 @@
     },
     computed: {
       isExternal() {
-        return /^(https?:|mailto:|tel:)/.test(this.iconClass)
+        return isExternal(this.iconClass)
       },
       iconName() {
         return `#icon-${this.iconClass}`
@@ -47,7 +50,7 @@
   }
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
   .svg-icon {
     width: 1em;
     height: 1em;

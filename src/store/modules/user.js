@@ -1,99 +1,139 @@
-/**
- * @author https://gitee.com/chu1204505056/vue-admin-better （不想保留author可删除）
- * @description 登录、获取用户信息、退出登录、清除accessToken逻辑，不建议修改
- */
-
-import Vue from 'vue'
-import { getUserInfo, login, logout } from '@/api/auth'
+import { login, getPublicKey, getInfo, logout } from '@/api/login'
 import {
-  getAccessToken,
-  removeAccessToken,
-  setAccessToken,
-} from '@/utils/accessToken'
-import { resetRouter } from '@/router'
-import { title, tokenName } from '@/config'
+  getToken,
+  setToken,
+  removeToken,
+  loadPublicKey,
+  savePublicKey,
+} from '@/utils/auth'
+import { encrypt } from '@/utils/rsaEncrypt'
 
-const state = () => ({
-  accessToken: getAccessToken(),
-  username: '',
-  avatar: '',
-  permissions: [],
-})
-const getters = {
-  accessToken: (state) => state.accessToken,
-  username: (state) => state.username,
-  avatar: (state) => state.avatar,
-  permissions: (state) => state.permissions,
+const user = {
+  state: {
+    token: getToken(),
+    user: {},
+    roles: [],
+    // 第一次加载菜单时用到
+    loadMenus: false,
+  },
+  // 可以理解为监听事件
+  mutations: {
+    SET_TOKEN: (state, token) => {
+      state.token = token
+    },
+    SET_USER: (state, user) => {
+      state.user = user
+    },
+    SET_ROLES: (state, roles) => {
+      state.roles = roles
+    },
+    SET_LOAD_MENUS: (state, loadMenus) => {
+      state.loadMenus = loadMenus
+    },
+  },
+  // Action 提交的是 mutation，而不是直接变更状态。
+  actions: {
+    // 获取状态 status
+    GetPublicKey({ commit }) {
+      return new Promise((resolve, reject) => {
+        getPublicKey()
+          .then((res) => {
+            savePublicKey(res)
+            resolve()
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    // 获取用户信息
+    GetInfo({ commit }) {
+      return new Promise((resolve, reject) => {
+        getInfo()
+          .then((res) => {
+            const userInfo = res
+            setUserInfo(userInfo, commit)
+            // const publicKey = res.publicKey
+            // savePublicKey(publicKey)
+            resolve(res)
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    // 登录
+    Login({ commit }, userInfo) {
+      const userForm = {
+        username: userInfo.username,
+        // 'password': encrypt(loadPublicKey(), userInfo.password),
+        password: userInfo.password,
+        // 'remember-me': userInfo.rememberMe,
+        // 'validateCode': userInfo.validateCode,
+        // 'validateCodeId': userInfo.validateCodeId
+      }
+      return new Promise((resolve, reject) => {
+        login(userForm)
+          .then((res) => {
+            console.log(res)
+            const user = res
+            const token = user.token
+            // 存储 token
+            setToken(token)
+            commit('SET_TOKEN', token)
+            // 用户公钥
+            //  const publicKey = res.publicKey
+            //  savePublicKey(publicKey)
+            // 用户信息
+
+            console.log(res)
+            setUserInfo(user, commit)
+            // 第一次加载菜单时用到， 具体见 src 目录下的 permission.js
+            commit('SET_LOAD_MENUS', true)
+            resolve()
+          })
+          .catch((error) => {
+            reject(error)
+          })
+      })
+    },
+    // 登出
+    LogOut({ commit }) {
+      return new Promise((resolve, reject) => {
+        logout()
+          .then((res) => {
+            logOut(commit)
+            resolve()
+          })
+          .catch((error) => {
+            logOut(commit)
+            reject(error)
+          })
+      })
+    },
+    // 更新菜单
+    updateLoadMenus({ commit }) {
+      return new Promise((resolve, reject) => {
+        commit('SET_LOAD_MENUS', false)
+      })
+    },
+  },
 }
-const mutations = {
-  setAccessToken(state, accessToken) {
-    state.accessToken = accessToken
-    setAccessToken(accessToken)
-  },
-  setUsername(state, username) {
-    state.username = username
-  },
-  setAvatar(state, avatar) {
-    state.avatar = avatar
-  },
-  setPermissions(state, permissions) {
-    state.permissions = permissions
-  },
+
+export const logOut = (commit) => {
+  commit('SET_TOKEN', '')
+  commit('SET_ROLES', [])
+  removeToken()
 }
-const actions = {
-  setPermissions({ commit }, permissions) {
-    commit('setPermissions', permissions)
-  },
-  async login({ commit }, userInfo) {
-    const { data } = await login(userInfo)
-    const accessToken = data['token']
-    if (accessToken) {
-      commit('setAccessToken', accessToken)
-      const hour = new Date().getHours()
-      const thisTime =
-        hour < 8
-          ? '早上好'
-          : hour <= 11
-          ? '上午好'
-          : hour <= 13
-          ? '中午好'
-          : hour < 18
-          ? '下午好'
-          : '晚上好'
-      Vue.prototype.$baseNotify(`欢迎登录${title}`, `${thisTime}！`)
-    } else {
-      Vue.prototype.$baseMessage(
-        `登录接口异常，未正确返回${tokenName}...`,
-        'error'
-      )
-    }
-  },
-  async getUserInfo({ commit, state }) {
-    const { data } = await getUserInfo(state.accessToken)
-    if (!data) {
-      Vue.prototype.$baseMessage('验证失败，请重新登录...', 'error')
-      return false
-    }
-    let { permissions, username, avatar } = data
-    if (permissions && username && Array.isArray(permissions)) {
-      commit('setPermissions', permissions)
-      commit('setUsername', username)
-      commit('setAvatar', avatar)
-      return permissions
-    } else {
-      Vue.prototype.$baseMessage('用户信息接口异常', 'error')
-      return false
-    }
-  },
-  async logout({ dispatch }) {
-    await logout(state.accessToken)
-    await dispatch('resetAccessToken')
-    await resetRouter()
-  },
-  resetAccessToken({ commit }) {
-    commit('setPermissions', [])
-    commit('setAccessToken', '')
-    removeAccessToken()
-  },
+
+export const setUserInfo = (user, commit) => {
+  // 如果没有任何权限，则赋予一个默认的权限，避免请求死循环
+  if (user.roleList.length > 0) {
+    commit('SET_ROLES', user.roleList)
+  } else {
+    commit('SET_ROLES', ['ROLE_SYSTEM_DEFAULT'])
+  }
+  commit('SET_USER', user)
 }
-export default { state, getters, mutations, actions }
+
+export default user

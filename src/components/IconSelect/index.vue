@@ -1,3 +1,4 @@
+<!-- @author zhengjie -->
 <template>
   <div class="icon-body">
     <el-input
@@ -55,15 +56,13 @@
   }
 </script>
 
-<style lang="scss" scoped>
+<style rel="stylesheet/scss" lang="scss" scoped>
   .icon-body {
     width: 100%;
     padding: 10px;
-
     .icon-list {
       height: 200px;
       overflow-y: scroll;
-
       div {
         height: 30px;
         line-height: 30px;
@@ -72,7 +71,6 @@
         width: 33%;
         float: left;
       }
-
       span {
         display: inline-block;
         vertical-align: -0.15em;
