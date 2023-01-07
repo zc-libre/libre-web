@@ -267,11 +267,7 @@
           <span v-else>是</span>
         </template>
       </el-table-column>
-      <el-table-column prop="createdAt" label="创建日期" width="150">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.createdAt) }}</span>
-        </template>
-      </el-table-column>
+      <el-table-column prop="gmtCreate" label="创建日期" width="150" />
       <el-table-column
         v-permission="['admin', 'menu:edit', 'menu:del']"
         label="操作"
@@ -373,6 +369,7 @@
           this.getSupDepts([])
         }
       },
+
       getSupDepts(data) {
         crudMenu.getMenuSuperior(data).then((res) => {
           const children = arrayToTree(res, { parentProperty: 'parentId' })

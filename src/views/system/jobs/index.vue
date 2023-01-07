@@ -19,17 +19,8 @@
             class="filter-item"
             @keyup.enter.native="crud.toQuery"
           />
-          <el-input
-            v-model="query.jobGroup"
-            clearable
-            size="small"
-            placeholder="输入任务组名搜索"
-            style="width: 200px"
-            class="filter-item"
-            @keyup.enter.native="crud.toQuery"
-          />
           <el-select
-            v-model="query.jobState"
+            v-model="query.jobStatus"
             clearable
             size="small"
             placeholder="状态"
@@ -56,27 +47,45 @@
       :close-on-click-modal="false"
       :before-close="crud.cancelCU"
       :visible.sync="crud.status.cu === 1"
-      width="500px"
+      width="600px"
     >
       <el-form
         ref="form"
-        inline
         :model="form"
         :rules="rules"
         size="small"
-        label-width="80px"
+        width="600px"
+        label-width="100px"
       >
-        <el-form-item label="任务组名" prop="jobName">
+        <el-form-item label="任务名" prop="jobName">
           <el-input v-model="form.jobName" style="width: 370px" />
         </el-form-item>
-        <el-form-item label="任务组名" prop="jobGroup">
-          <el-input v-model="form.jobGroup" style="width: 370px" />
+        <el-form-item label="bean名称" prop="beanName">
+          <el-input v-model="form.beanName" style="width: 370px" />
         </el-form-item>
-        <el-form-item label="任务类名" prop="jobClassName">
-          <el-input v-model="form.jobClassName" style="width: 370px" />
+        <el-form-item label="执行方法" prop="methodName">
+          <el-input v-model="form.methodName" style="width: 370px" />
         </el-form-item>
         <el-form-item label="任务cron" prop="cronExpression">
           <el-input v-model="form.cronExpression" style="width: 370px" />
+        </el-form-item>
+        <el-form-item label="状态" prop="jobStatus">
+          <el-radio
+            v-for="item in dict.sys_job_status"
+            :key="item.id"
+            v-model="form.jobStatus"
+            :label="Number(item.value)"
+          >
+            {{ item.label }}
+          </el-radio>
+        </el-form-item>
+
+        <el-form-item label="参数内容" prop="params">
+          <el-input
+            type="textarea"
+            v-model="form.params"
+            style="width: 370px"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -96,7 +105,7 @@
       append-to-body
       :close-on-click-modal="false"
       :visible.sync="updateFormVisible"
-      width="500px"
+      width="600px"
     >
       <el-form
         ref="form"
@@ -104,10 +113,38 @@
         :model="form"
         :rules="updateRules"
         size="small"
-        label-width="80px"
+        width="600px"
+        label-width="100px"
       >
-        <el-form-item label="表达式">
+        <el-form-item label="任务名" prop="jobName">
+          <el-input v-model="form.jobName" style="width: 370px" />
+        </el-form-item>
+        <el-form-item label="bean名称" prop="beanName">
+          <el-input v-model="form.beanName" style="width: 370px" />
+        </el-form-item>
+        <el-form-item label="执行方法" prop="methodName">
+          <el-input v-model="form.methodName" style="width: 370px" />
+        </el-form-item>
+        <el-form-item label="任务cron" prop="cronExpression">
           <el-input v-model="form.cronExpression" style="width: 370px" />
+        </el-form-item>
+        <el-form-item label="状态" prop="jobStatus">
+          <el-radio
+            v-for="item in dict.sys_job_status"
+            :key="item.id"
+            v-model="form.jobStatus"
+            :label="Number(item.value)"
+          >
+            {{ item.label }}
+          </el-radio>
+        </el-form-item>
+
+        <el-form-item label="参数内容" prop="params">
+          <el-input
+            type="textarea"
+            v-model="form.params"
+            style="width: 370px"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -131,25 +168,39 @@
     >
       <el-table-column prop="jobName" label="任务名称" align="center" />
       <el-table-column
-        prop="jobGroup"
-        label="任务所在组"
-        sortable
-        align="center"
-      />
-      <el-table-column
-        prop="jobClassName"
-        label="任务类名"
+        prop="beanName"
+        label="bean名称"
         show-overflow-tooltip
         align="center"
       />
-      <el-table-column prop="cronExpression" label="表达式" align="center" />
-      <el-table-column prop="timeZoneId" label="时区" align="center" />
       <el-table-column
-        prop="triggerState"
+        prop="methodName"
+        label="执行方法"
+        show-overflow-tooltip
+        align="center"
+      />
+      <el-table-column
+        prop="params"
+        label="参数内容"
+        show-overflow-tooltip
+        align="center"
+      />
+      <el-table-column
+        prop="jobStatus"
         label="状态"
         align="center"
         :formatter="formatState"
-      />
+      >
+        <template #default="scope">
+          <el-tag v-if="scope.row.jobStatus === 0">
+            {{ formatState(scope.row.jobStatus) }}
+          </el-tag>
+          <el-tag v-else-if="scope.row.jobStatus === 1" type="warning">
+            {{ formatState(scope.row.jobStatus) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="cronExpression" label="表达式" align="center" />
       <el-table-column
         v-permission="['admin', 'jobs:edit', 'jobs:del']"
         label="操作"
@@ -203,9 +254,11 @@
 
   const defaultForm = {
     jobName: null,
-    jobGroup: null,
-    jobClassName: null,
+    beanName: null,
+    methodName: null,
+    params: null,
     cronExpression: null,
+    jobStatus: 0,
   }
   export default {
     name: 'Jobs',
@@ -213,7 +266,7 @@
     cruds() {
       return CRUD({
         title: '任务',
-        url: 'system/jobs',
+        url: 'api/sys/job/page',
         isTreeTable: false,
         sort: [],
         crudMethod: { ...crudJob },
@@ -221,7 +274,7 @@
     },
     mixins: [presenter(), header(), form(defaultForm), crud()],
     // 设置数据字典
-    dicts: ['sys_jobs_state'],
+    dicts: ['sys_job_status'],
     data() {
       return {
         updateLoading: false,
@@ -256,40 +309,47 @@
     created() {
       this.crud.optShow = {
         add: true,
-        edit: false,
-        del: false,
+        edit: true,
+        del: true,
         download: false,
         reset: true,
       }
     },
     methods: {
+      changeEnabled() {},
       // 删除任务
       handleDelete: function (index, row) {
-        crudJob.del(row).then((res) => {
+        crudJob.del(row.id).then((res) => {
           this.crud.refresh()
         })
       },
       // 暂停任务
       handlePause: function (index, row) {
-        crudJob.pause(row).then((res) => {
+        row.jobStatus = 1
+        crudJob.updateStatus(row.id).then((res) => {
           this.crud.refresh()
         })
       },
       // 恢复任务
       handleResume: function (index, row) {
-        crudJob.resume(row).then((res) => {
+        row.jobStatus = 0
+        crudJob.updateStatus(row.id).then((res) => {
           this.crud.refresh()
         })
       },
       // 更新
-      handleUpdate: function (index, row) {
+      handleUpdate(index, row) {
         this.updateFormVisible = true
+        this.form.id = row.id
+        this.form.beanName = row.beanName
         this.form.jobName = row.jobName
-        this.form.jobGroup = row.jobGroup
+        this.form.params = row.params
+        this.form.methodName = row.methodName
+        this.form.jobStatus = row.jobStatus
         this.form.cronExpression = row.cronExpression
       },
       // 更新任务
-      update: function () {
+      update() {
         this.updateLoading = true
         crudJob.edit(this.form).then((res) => {
           this.updateLoading = false
@@ -298,9 +358,9 @@
         })
       },
       // 格式化状态
-      formatState: function (row, column, cellValue, index) {
-        const val = row[column.property]
-        return this.dict.label['sys_jobs_state'][val]
+      formatState(jobStatus) {
+        const val = String(jobStatus)
+        return this.dict.label['sys_job_status'][val]
       },
       normalizer(node) {
         return {
