@@ -44,7 +44,6 @@
       />
       <el-table-column prop="userName" label="用户名" />
       <el-table-column prop="nickName" label="昵称" />
-      <el-table-column prop="dept" label="部门" />
       <el-table-column prop="ip" label="登录IP" />
       <el-table-column
         prop="address"
@@ -103,7 +102,7 @@
     name: 'TokenMonitor',
     components: { pagination, crudOperation, rrOperation },
     cruds() {
-      return CRUD({ url: 'auth/token', title: '在线用户' })
+      return CRUD({ url: '/api/auth/token', title: '在线用户' })
     },
     mixins: [presenter(), header(), crud()],
     data() {

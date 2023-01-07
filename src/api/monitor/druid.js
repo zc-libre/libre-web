@@ -5,7 +5,7 @@ import request from '@/utils/request'
  */
 export function getSqlList() {
   return request({
-    url: 'system/monitor/sql',
+    url: 'api/sys/monitor/sql',
     method: 'get',
   })
 }

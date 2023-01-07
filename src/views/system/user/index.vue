@@ -182,8 +182,10 @@
               <el-switch
                 v-model="scope.row.enabled"
                 :disabled="Number(user.id) === Number(scope.row.id)"
-                active-color="#409EFF"
-                inactive-color="#F56C6C"
+                active-color="#13ce66"
+                inactive-color="#ff4949"
+                :active-value="1"
+                :inactive-value="0"
                 @change="changeEnabled(scope.row, scope.row.enabled)"
               />
             </template>
@@ -393,7 +395,7 @@
           '此操作将 "' +
             this.dict.label.sys_common_enabled[Number(val)] +
             '" ' +
-            data.userName +
+            data.username +
             ', 是否继续？',
           '提示',
           {
@@ -403,6 +405,8 @@
           }
         )
           .then(() => {
+            data.roleIds = data.roles.map((role) => role.id)
+
             crudUser
               .edit(data)
               .then((res) => {

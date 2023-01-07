@@ -5,7 +5,7 @@ import request from '@/utils/request'
  */
 export function getServerInfo() {
   return request({
-    url: 'system/monitor/server',
+    url: '/api/sys/monitor/server',
     method: 'get',
   })
 }
