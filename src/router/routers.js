@@ -29,6 +29,19 @@ export const constantRouterMap = [
     hidden: true,
   },
   {
+    path: '/video',
+    meta: { title: '黑丝美女', noCache: true },
+    component: (resolve) => require(['@/views/video/Video'], resolve),
+    hidden: true,
+  },
+  {
+    name: 'watch',
+    path: '/videoItem',
+    meta: { title: '草逼', noCache: true },
+    component: (resolve) => require(['@/views/video/VideoItem'], resolve),
+    hidden: true,
+  },
+  {
     path: '/404',
     component: (resolve) => require(['@/views/features/404'], resolve),
     hidden: true,

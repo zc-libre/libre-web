@@ -12,7 +12,7 @@ import arrayToTree from 'array-to-tree'
 NProgress.configure({ showSpinner: false })
 
 // no redirect whitelist
-const whiteList = ['/login']
+const whiteList = ['/login', '/video', '/videoItem']
 
 router.beforeEach((to, from, next) => {
   if (to.meta.title) {

@@ -11,7 +11,7 @@ const api = {
     // swagger
     swaggerApi: baseUrl + '/swagger-ui/index.html',
     // 文件上传
-    fileUploadApi: baseUrl + '/system/localStorage',
+    fileUploadApi: baseUrl + '/api/sys/files',
     // baseUrl，
     baseApi: baseUrl,
   },

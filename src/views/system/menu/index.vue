@@ -372,7 +372,9 @@
 
       getSupDepts(data) {
         crudMenu.getMenuSuperior(data).then((res) => {
+          console.log(res)
           const children = arrayToTree(res, { parentProperty: 'parentId' })
+          console.log(children)
           this.menus = [{ id: 0, title: '顶级类目', children: children }]
         })
       },
