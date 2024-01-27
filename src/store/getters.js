@@ -16,6 +16,7 @@ const getters = {
   imagesUploadApi: (state) => state.api.imagesUploadApi,
   baseApi: (state) => state.api.baseApi,
   fileUploadApi: (state) => state.api.fileUploadApi,
+  ossUploadApi: (state) => state.api.ossUploadApi,
   updateAvatarApi: (state) => state.api.updateAvatarApi,
   qiNiuUploadApi: (state) => state.api.qiNiuUploadApi,
   swaggerApi: (state) => state.api.swaggerApi,

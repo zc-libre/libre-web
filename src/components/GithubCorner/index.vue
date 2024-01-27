@@ -1,6 +1,6 @@
 <template>
   <a
-    href="https://git.dreamlu.net/micax/mica-fast"
+    href="https://github.com/zc-libre"
     target="_blank"
     class="github-corner"
     aria-label="View source on Github"

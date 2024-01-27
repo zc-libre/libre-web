@@ -47,9 +47,9 @@ module.exports = {
    * 底部文字，支持html语法
    */
   footerTxt:
-    '© 2019 <a href="https://www.dreamlu.net" target="_blank">如梦技术</a>',
+    '© 2023 <a href="https://www.baidu.com" target="_blank">老汉推车</a>',
   /**
    * 备案号
    */
-  caseNumber: '京ICP备13040556号-2',
+  caseNumber: '',
 }

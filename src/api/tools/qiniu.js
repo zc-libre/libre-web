@@ -17,21 +17,21 @@ export function update(data) {
 
 export function download(id) {
   return request({
-    url: 'api/qiNiuContent/download/' + id,
+    url: 'api/sys/files/path/' + id,
     method: 'get',
   })
 }
 
 export function sync() {
   return request({
-    url: 'api/qiNiuContent/synchronize',
+    url: '/api/sys/files/sync',
     method: 'post',
   })
 }
 
 export function del(ids) {
   return request({
-    url: 'api/qiNiuContent',
+    url: '/api/sys/files',
     method: 'delete',
     data: ids,
   })

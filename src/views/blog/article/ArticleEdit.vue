@@ -1,19 +1,42 @@
 <template>
-  <el-card class="main-card">
-    <div class="title">{{ this.$route.name }}</div>
-    <div class="article-title-container">
-      <el-input v-model="article.articleName" size="medium" placeholder="输入文章标题"/>
-      <el-button
-          type="danger"
-          size="medium"
-          class="save-btn"
-          @click="saveArticleDraft"
-          v-if="article.id == null || article.status === 3">
-        保存草稿
-      </el-button>
-      <el-button type="danger" size="medium" @click="openModel" style="margin-left: 10px"> 发布文章</el-button>
+  <div class="main-card">
+    <div class="edit-title">
+      <div class="title">{{ this.$route.name }}</div>
+      <div class="article-title-container">
+        <el-input v-model="article.articleName" size="medium" placeholder="输入文章标题"/>
+        <el-button
+            type="danger"
+            size="medium"
+            class="save-btn"
+            @click="saveArticleDraft"
+            v-if="article.id == null || article.status === 3">
+          保存草稿
+        </el-button>
+        <el-button type="danger" size="medium" @click="openModel" style="margin-left: 10px"> 发布文章</el-button>
+      </div>
     </div>
-    <mavon-editor ref="md" v-model="article.content" @imgAdd="uploadImg"  style="height: calc(100vh - 260px)"/>
+    <div class="editor">
+      <div id="editor—wrapper" style="border: 1px solid #ccc;">
+        <div id="toolbar-container">
+          <Toolbar
+              style="border-bottom: 1px solid #ccc"
+              :editor="editor"
+              :defaultConfig="toolbarConfig"
+              :mode="mode"
+          />
+        </div>
+        <div id="editor-container">
+          <Editor
+              style="height: 500px; overflow-y: hidden;"
+              v-model="article.content"
+              :defaultConfig="editorConfig"
+              :mode="mode"
+              @onCreated="onCreated"
+              @change="onChange"
+          />
+        </div>
+      </div>
+    </div>
     <el-dialog :visible.sync="addOrEdit" width="40%" top="3vh">
       <div class="dialog-title-container" slot="title">发布文章</div>
       <el-form label-width="80px" size="medium" :model="article">
@@ -56,7 +79,8 @@
               @close="removeTag(item)">
             {{ item }}
           </el-tag>
-          <el-popover placement="bottom-start" width="460" trigger="click" v-if="article.tagNames && article.tagNames.length < 3">
+          <el-popover placement="bottom-start" width="460" trigger="click"
+                      v-if="article.tagNames && article.tagNames.length < 3">
             <div class="popover-title">标签</div>
             <el-autocomplete
                 style="width: 100%"
@@ -135,21 +159,24 @@
         <el-button type="danger" @click="saveOrUpdateArticle"> 发 表</el-button>
       </div>
     </el-dialog>
-  </el-card>
+  </div>
 </template>
 
 <script>
 import * as imageConversion from 'image-conversion'
-import { categoryList, list } from '@/api/blog/category'
-import { listAllTag } from '@/api/blog/tag'
-import { mapGetters } from "vuex";
-import { getToken } from '@/utils/auth'
-import { add, get } from '@/api/blog/article'
-import { upload } from "@/api/tools/files"
+import {categoryList, list} from '@/api/blog/category'
+import {listAllTag} from '@/api/blog/tag'
+import {mapGetters} from "vuex";
+import {getToken} from '@/utils/auth'
+import {add, get} from '@/api/blog/article'
+import {upload} from "@/api/tools/files"
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 export default {
   name: 'ArticleEdit',
+  components: { Editor, Toolbar },
   created() {
+
     console.log("-==========")
     const articleId = this.$route.query.articleId
     if (articleId) {
@@ -168,8 +195,7 @@ export default {
         }
         console.log(this.article)
       })
-    }
-    else {
+    } else {
       const article = sessionStorage.getItem('article')
       if (article) {
         this.article = JSON.parse(article)
@@ -190,6 +216,11 @@ export default {
   },
   data() {
     return {
+      editor: null,
+      html: '',
+      toolbarConfig: {},
+      editorConfig: { placeholder: '请输入内容...' },
+      mode: 'default', // or 'simple'
       addOrEdit: false,
       autoSave: true,
       categoryName: '',
@@ -225,10 +256,19 @@ export default {
         type: 1,
         status: 1
       },
-      headers: { Authorization: 'Bearer ' + getToken() }
+      headers: {Authorization: 'Bearer ' + getToken()}
     }
   },
   methods: {
+    onCreated(editor) {
+      this.editor = Object.seal(editor) // 一定要用 Object.seal() ，否则会报错
+    },
+    onChange() {
+
+    },
+    code(content) {
+
+    },
     listCategories() {
       categoryList().then(res => {
         this.categories = res
@@ -291,8 +331,7 @@ export default {
             title: '成功',
             message: '保存草稿成功'
           })
-        }
-        else {
+        } else {
           this.$notify.error({
             title: '失败',
             message: '保存草稿失败'
@@ -322,6 +361,7 @@ export default {
         this.$message.error('文章封面不能为空')
         return false
       }
+      this.code(this.article.content)
       add(this.article).then(res => {
         this.$notify.success({
           title: '成功'
@@ -331,7 +371,7 @@ export default {
       this.autoSave = false
     },
     searchCategories(keywords, cb) {
-      let param = { blurry: keywords }
+      let param = {blurry: keywords}
       list(param)
           .then(res => {
             cb(res)
@@ -378,12 +418,25 @@ export default {
       const index = this.article.tagNames.indexOf(item)
       this.article.tagNames.splice(index, 1)
       this.article.tagIds.splice(index, 1)
+    },
+    beforeDestroy() {
+      const editor = this.editor
+      if (editor == null) return
+      editor.destroy() // 组件销毁时，及时销毁编辑器
     }
   },
 }
 </script>
 
+<style src="@wangeditor/editor/dist/css/style.css"></style>
 <style scoped>
+.main-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
 .article-title-container {
   display: flex;
   align-items: center;
