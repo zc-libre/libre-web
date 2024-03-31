@@ -5,11 +5,11 @@
       <div class="article-title-container">
         <el-input v-model="article.articleName" size="medium" placeholder="输入文章标题"/>
         <el-button
-            type="danger"
-            size="medium"
-            class="save-btn"
-            @click="saveArticleDraft"
-            v-if="article.id == null || article.status === 3">
+          type="danger"
+          size="medium"
+          class="save-btn"
+          @click="saveArticleDraft"
+          v-if="article.id == null || article.status === 3">
           保存草稿
         </el-button>
         <el-button type="danger" size="medium" @click="openModel" style="margin-left: 10px"> 发布文章</el-button>
@@ -17,47 +17,44 @@
     </div>
     <div class="editor">
       <div id="editor—wrapper" style="border: 1px solid #ccc;">
-        <div id="toolbar-container">
-          <Toolbar
-              style="border-bottom: 1px solid #ccc"
-              :editor="editor"
-              :defaultConfig="toolbarConfig"
-              :mode="mode"
-          />
-        </div>
-        <div id="editor-container">
-          <Editor
-              style="height: 500px; overflow-y: hidden;"
-              v-model="article.content"
-              :defaultConfig="editorConfig"
-              :mode="mode"
-              @onCreated="onCreated"
-              @change="onChange"
-          />
-        </div>
+        <Toolbar
+          style="border-bottom: 1px solid #ccc"
+          :editor="editor"
+          :defaultConfig="toolbarConfig"
+          :mode="mode"
+        />
+        <Editor
+          style="height: 300px;"
+          v-model="article.content"
+          :defaultConfig="editorConfig"
+          :mode="mode"
+          @onCreated="onCreated"
+          @change="onChange"
+        />
       </div>
     </div>
+
     <el-dialog :visible.sync="addOrEdit" width="40%" top="3vh">
       <div class="dialog-title-container" slot="title">发布文章</div>
       <el-form label-width="80px" size="medium" :model="article">
         <el-form-item label="文章分类">
           <el-tag
-              type="success"
-              v-show="article.categoryName"
-              style="margin: 0 1rem 0 0"
-              :closable="true"
-              @close="removeCategory">
+            type="success"
+            v-show="article.categoryName"
+            style="margin: 0 1rem 0 0"
+            :closable="true"
+            @close="removeCategory">
             {{ article.categoryName }}
           </el-tag>
           <el-popover placement="bottom-start" width="460" trigger="click" v-if="!article.categoryName">
             <div class="popover-title">分类</div>
             <el-autocomplete
-                style="width: 100%"
-                v-model="categoryName"
-                :fetch-suggestions="searchCategories"
-                placeholder="请输入分类名搜索"
-                :trigger-on-focus="false"
-                @select="handleSelectCategories">
+              style="width: 100%"
+              v-model="categoryName"
+              :fetch-suggestions="searchCategories"
+              placeholder="请输入分类名搜索"
+              :trigger-on-focus="false"
+              @select="handleSelectCategories">
               <template slot-scope="{ item }">
                 <div>{{ item.categoryName }}</div>
               </template>
@@ -72,23 +69,23 @@
         </el-form-item>
         <el-form-item label="文章标签">
           <el-tag
-              v-for="(item, index) of article.tagNames"
-              :key="index"
-              style="margin: 0 1rem 0 0"
-              :closable="true"
-              @close="removeTag(item)">
+            v-for="(item, index) of article.tagNames"
+            :key="index"
+            style="margin: 0 1rem 0 0"
+            :closable="true"
+            @close="removeTag(item)">
             {{ item }}
           </el-tag>
           <el-popover placement="bottom-start" width="460" trigger="click"
                       v-if="article.tagNames && article.tagNames.length < 3">
             <div class="popover-title">标签</div>
             <el-autocomplete
-                style="width: 100%"
-                v-model="tagName"
-                :fetch-suggestions="searchTags"
-                placeholder="请输入标签名搜索"
-                :trigger-on-focus="false"
-                @select="handleSelectTag">
+              style="width: 100%"
+              v-model="tagName"
+              :fetch-suggestions="searchTags"
+              placeholder="请输入标签名搜索"
+              :trigger-on-focus="false"
+              @select="handleSelectTag">
               <template slot-scope="{ item }">
                 <div>{{ item.tagName }}</div>
               </template>
@@ -112,33 +109,34 @@
         </el-form-item>
         <el-form-item label="上传封面">
           <el-upload
-              class="upload-cover"
-              drag
-              :action="fileUploadApi"
-              multiple
-              :headers="headers"
-              :before-upload="beforeUpload"
-              :on-success="uploadCover">
+            class="upload-cover"
+            drag
+            :action="ossUploadApi"
+            :data="{type: 2}"
+            multiple
+            :headers="headers"
+            :before-upload="beforeUpload"
+            :on-success="uploadCover">
             <i class="el-icon-upload" v-if="article.cover === ''"/>
             <div class="el-upload__text" v-if="article.cover === ''">将文件拖到此处，或<em>点击上传</em></div>
-            <img :src="baseApi + '/file/' + article.cover" width="360px" height="180px"/>
+            <img :src="article.cover" width="360px" height="180px"/>
           </el-upload>
         </el-form-item>
         <el-form-item label="置顶">
           <el-switch
-              v-model="article.top"
-              active-color="#13ce66"
-              inactive-color="#F4F4F5"
-              :active-value="1"
-              :inactive-value="0"/>
+            v-model="article.top"
+            active-color="#13ce66"
+            inactive-color="#F4F4F5"
+            :active-value="1"
+            :inactive-value="0"/>
         </el-form-item>
         <el-form-item label="推荐">
           <el-switch
-              v-model="article.featured"
-              active-color="#13ce66"
-              inactive-color="#F4F4F5"
-              :active-value="1"
-              :inactive-value="0"/>
+            v-model="article.featured"
+            active-color="#13ce66"
+            inactive-color="#F4F4F5"
+            :active-value="1"
+            :inactive-value="0"/>
         </el-form-item>
         <el-form-item label="发布形式">
           <el-radio-group v-model="article.status">
@@ -169,15 +167,16 @@ import {listAllTag} from '@/api/blog/tag'
 import {mapGetters} from "vuex";
 import {getToken} from '@/utils/auth'
 import {add, get} from '@/api/blog/article'
-import {upload} from "@/api/tools/files"
-import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-
+import {upload, getOssFileUrl} from "@/api/tools/files"
+import { Boot, SlateElement, IModuleConf } from '@wangeditor/editor'
+// 引入markdown语法
+import markdownModule from '@wangeditor/plugin-md'
+import {Editor, Toolbar, } from '@wangeditor/editor-for-vue'
+Boot.registerModule(markdownModule)
 export default {
   name: 'ArticleEdit',
-  components: { Editor, Toolbar },
+  components: {Editor, Toolbar},
   created() {
-
-    console.log("-==========")
     const articleId = this.$route.query.articleId
     if (articleId) {
       get(articleId).then(res => {
@@ -205,6 +204,7 @@ export default {
   computed: {
     ...mapGetters([
       'baseApi',
+      'ossUploadApi',
       'fileUploadApi'
     ]),
     tagClass() {
@@ -219,7 +219,7 @@ export default {
       editor: null,
       html: '',
       toolbarConfig: {},
-      editorConfig: { placeholder: '请输入内容...' },
+      editorConfig: {placeholder: '请输入内容...'},
       mode: 'default', // or 'simple'
       addOrEdit: false,
       autoSave: true,
@@ -293,7 +293,14 @@ export default {
       this.addOrEdit = true
     },
     uploadCover(response) {
-      this.article.cover = response.data
+      console.log(response)
+      this.article.cover = response.data.path
+      // if (file) {
+      //   getOssFileUrl(file.id).then(res => {
+      //     this.article.cover = res
+      //     this.$forceUpdate()
+      //   })
+      // }
     },
     beforeUpload(file) {
       let isLt2M = true
@@ -367,15 +374,16 @@ export default {
           title: '成功'
         })
         this.addOrEdit = false
+        this.$router.push('/blog/article')
       })
       this.autoSave = false
     },
     searchCategories(keywords, cb) {
       let param = {blurry: keywords}
       list(param)
-          .then(res => {
-            cb(res)
-          })
+        .then(res => {
+          cb(res)
+        })
     },
     handleSelectCategories(item) {
       this.addCategory({
@@ -393,14 +401,14 @@ export default {
     },
     searchTags(keywords, cb) {
       this.axios
-          .get('/api/admin/tags/search', {
-            params: {
-              keywords: keywords
-            }
-          })
-          .then(({data}) => {
-            cb(data.data)
-          })
+        .get('/api/admin/tags/search', {
+          params: {
+            keywords: keywords
+          }
+        })
+        .then(({data}) => {
+          cb(data.data)
+        })
     },
     handleSelectTag(item) {
       this.addTag({
@@ -429,13 +437,19 @@ export default {
 </script>
 
 <style src="@wangeditor/editor/dist/css/style.css"></style>
-<style scoped>
+<style lang="scss" scoped>
+
 .main-card {
   display: flex;
   flex-direction: column;
-  height: 100%;
   width: 100%;
+  padding: 30px;
+
+  .edit-title {
+  }
+
 }
+
 
 .article-title-container {
   display: flex;
@@ -448,19 +462,6 @@ export default {
   margin-left: 0.75rem;
   background: #fff;
   color: #f56c6c;
-}
-
-.tag-item {
-  margin-right: 1rem;
-  margin-bottom: 1rem;
-  cursor: pointer;
-}
-
-.tag-item-select {
-  margin-right: 1rem;
-  margin-bottom: 1rem;
-  cursor: not-allowed;
-  color: #ccccd8 !important;
 }
 
 .category-item {

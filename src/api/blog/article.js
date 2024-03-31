@@ -39,7 +39,6 @@ export function edit(data) {
         data: data,
     })
 }
-
 // 删除公告
 export function del(ids) {
     return request({
@@ -47,6 +46,22 @@ export function del(ids) {
         method: 'delete',
         data: ids,
     })
+}
+
+export function changeStatus(data) {
+  return request({
+    url: '/api/blog/article/changeStatus',
+    method: 'post',
+    data: data,
+  })
+}
+
+export function changeTop(data) {
+  return request({
+    url: '/api/blog/article/changeTop',
+    method: 'post',
+    data: data,
+  })
 }
 
 export default { add, edit, del, get }

@@ -406,7 +406,6 @@
         )
           .then(() => {
             data.roleIds = data.roles.map((role) => role.id)
-
             crudUser
               .edit(data)
               .then((res) => {

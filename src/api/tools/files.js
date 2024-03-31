@@ -9,5 +9,11 @@ export function upload(file) {
     })
 }
 
+export function getOssFileUrl(id) {
+  return request({
+    url: '/api/sys/files/path/' + id,
+    method: 'get'
+  })
+}
 
-export default { upload }
+export default { upload, getOssFileUrl }
